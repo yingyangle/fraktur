@@ -1,0 +1,82 @@
+Fraktur Cracker
+############ N O T E S ############
+
+OCR Tools
+•	Google Tesseract
+•	https://opensource.google/projects/tesseract
+•	https://medium.com/better-programming/beginners-guide-to-tesseract-ocr-using-python-10ecbb426c3d
+•	Franken+
+•	http://emop.tamu.edu/outcomes/Franken-Plus
+•	OCRopus
+•	the first OCR engine with a recognition algorithm based on recurrent neural nets (RNNs) with long short-term memory (LSTM)
+•	LSTM architecture overcomes the problem of earlier neural networks to forget previously learned information
+•	ABBYY
+
+Previous Attempts at Historical OCR
+•	Kallimachos Project (Würzburg University)- Franken+, 90%+ accuracy
+•	creating diplomatic transcriptions from scratch for each individual font
+•	Ul-Hasan, Bukhari, and Dengel (2016)- 93%+ accuracy
+•	first training Tesseract on a historically reconstructed font
+•	applied the resulting model to a specific book and used the recognized text as pseudo-ground truth to train OCRopus
+•	Ocular OCR, 90%+ accuracy
+•	Berg-Kirkpatrick, Durrett, and Klein (2013) and Berg-Kirkpatrick and Klein (2014)
+•	convert printed to electronic text in a completely unsupervised manner (i.e., no ground truth is needed) employing a language, typesetting, inking, and noise model
+•	very resource-intensive and slow (transcribing 30 lines of text in 2.4 min)
+•	results are better than (untrained) Tesseract and ABBYY
+
+Ground truth
+Diplomatic transcription
+diachronic corpus
+•	high variability, good test case for the training and application of our OCR models
+
+To-do list
+•	find/ pick OCR tool?
+•	Try to segment data into letters (if needed for the tool chosen)
+•	Look into which features we should extract to train model on
+•	read/research more into previous attempts at Fraktur OCR
+•	read/research into general OCR techniques
+•	Calculate accuracy metrics
+•	adjust/improve model, etc.
+
+http://www.digitalhumanities.org/dhq/vol/11/2/000288/000288.html
+•	for earlier printings it is necessary to train on real data
+•	Unicode character codes for unusual historical characters are available due to the efforts of the Medieval Unicode Font Initiative.
+•	segmentation of the image of a printed page into single text lines is part of a preprocessing step that also involves other functions such as deskewing, border cropping, converting colored page images into binary or grayscale, and some denoising
+•	used the open source program ScanTailor for producing clean TIF-images of text regions that were subsequently cut into text lines by the OCRopus subprogram ocropus-gpageseg.
+•	inputs (vertical stripes of pixel values) to outputs (characters)
+•	no need to segment the line further into single glyphs as is usually done by traditional OCR.
+•	More detailed explanations of the inner workings of neural net training are given in [Breuel et al. 2013], and a detailed tutorial on how to train models from the user perspective is available in [Springmann 2015]
+•	Split data 90% for training and 10% for testing
+Evaluation:
+•	Evaluate test results using the minimal edit (Levenshtein) distance between these two symbol strings is the number of character errors for this line
+•	To get an idea of the variance of the measurement values we also indicated upper and lower limits of a 95% confidence interval for character accuracies calculated from the assumption that OCR recognition can be treated as a Bernoulli experiment with the measured accuracy as the probability for correct recognition
+•	Evaluations of word accuracies were done with the UNLV/ISRI Analytic Tools for OCR Evaluation [Nartker et al. 2005] adapted for UTF-8 by Nick White
+•	word accuracies show a much wider variance than char accuracies, ranging from 76% to 97%, due to the statistics of single character errors (whether the char errors are spread out in many words or contained in just a few)
+•	lack of any correlation between OCR accuracy and printing age !
+
+
+Timeline:
+Oct. 22 Finish researching and testing to select the best approach
+Nov. 5 Finish training model on recognize individual Fraktur letter, number, special character to machine-encoded text. (code included)
+Nov. 22 Finish training model on transcribing the image of a page of text in printed Fraktur letters and transcribe to machine-encoded text (code included)
+•	Time permitting, we will use our model that is trained on individual and page of printed Fraktur letter to transcribe manuscripts and analyze the precision of this approach. (code included)
+Dec. 1 Finish writing project report
+Dec. 3 Finish making slides and other preparation for presentation
+Dec. 5 Presentation Day/ Project report due
+
+Data
+https://zenodo.org/record/1344132#.XZtZNedKjOQ
+
+References:
+https://arxiv.org/pdf/1809.05501.pdf
+This paper provides a useful overview of some Fraktur datasets used in OCR training, and will serve as a good guide for our project. It includes background on the current technologies and research concerning the OCR of historical texts and some of the obstacles people face.
+http://www.digitalhumanities.org/dhq/vol/11/2/000288/000288.html
+***This paper describes a method of transcribing historical texts, including texts printed in Fraktur. Having this example of previous research will serve as a useful guide as we go about our own project and try out different methods and approaches.
+https://dl.acm.org/citation.cfm?id=2549524
+This paper presents an example of research done to improve OCR results for Fraktur, using line normalization and 1D-LSTM. This will be useful in helping us improve the accuracy of our model using similar techniques. 
+https://arxiv.org/pdf/1810.03436.pd
+This paper presents an evaluation and comparison of different OCR models when applied to Fraktur. This will be a useful reference in helping us develop our own model and deciding upon the best approach.
+https://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0094137.s001
+This article provides a brief explanation of different model approaches we might try, for reference.
+
+ 
