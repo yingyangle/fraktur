@@ -1,5 +1,7 @@
 # Christine Yang
-# sep.py
+# Fraktur Cracker
+# seg.py
+# attempt at simple character segmentation
 
 import os, re, glob, codecs, more_itertools as mit
 from PIL import Image
