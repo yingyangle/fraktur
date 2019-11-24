@@ -1,7 +1,7 @@
 # Christine Yang
 # Fraktur Cracker
 # seg_another.py
-# attempt at character segmentation and also some playing around with Tesseract
+# another attempt at character segmentation and also playing around with Tesseract
 
 # USING TESSERACT
 # https://medium.com/better-programming/beginners-guide-to-tesseract-ocr-using-python-10ecbb426c3d
@@ -45,16 +45,12 @@ def cv(filename):
         os.mkdir('letters')
         os.chdir('letters')
     except: os.chdir('letters')
-    gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY) # grayscale
-    cv2.imshow('gray', gray)
-    ret,thresh = cv2.threshold(gray,127,255,cv2.THRESH_BINARY_INV) # binary
-    cv2.imshow('second', thresh)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # grayscale
+    ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV) # binary
     kernel = np.ones((1,1), np.uint8) # dilation
     img_dilation = cv2.dilate(thresh, kernel, iterations=1)
-    cv2.imshow('dilated', img_dilation)
     # find contours
     im2, ctrs, hier = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
     sorted_ctrs = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0]) # sort contours
     for i, ctr in enumerate(ctrs):
         x, y, w, h = cv2.boundingRect(ctr) # get bounding box
