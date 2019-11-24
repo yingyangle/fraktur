@@ -33,8 +33,8 @@ def seg(filename):
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         roi = out[y:y+h, x:x+w] # getting ROI
         cv2.imwrite('{}{}.png'.format(filename[:-4], i), roi) # save cropped output image
-    for i in range(len(contours)): cv2.drawContours(img, contours, i, (0,255,0))
-    cv2.imwrite(filename, img) # full image with regions drawn in green
+        cv2.drawContours(img, contours, i, (0,0,255), thickness=2)
+    cv2.imwrite(filename, img) # full image with regions drawn in red
 
 # execute
 seg('hard.png')
