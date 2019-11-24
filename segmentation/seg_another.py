@@ -14,6 +14,9 @@
 
 # OPENCV
 # https://stackoverflow.com/questions/49291770/ocr-cropping-the-letters
+# https://stackoverflow.com/questions/42316315/how-to-segment-license-plate-characters-removing-unwanted-characters-using-openc
+# https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
+# https://circuitdigest.com/tutorial/image-segmentation-using-opencv
 
 import os, codecs, numpy as np, tesserocr, cv2
 from tesserocr import PyTessBaseAPI
@@ -31,9 +34,9 @@ def tess(filename):
         # print(tesserocr.tesseract_version())
         api.SetImageFile(filename)
         with codecs.open(filename[:-3]+'txt', 'r', 'utf-8') as ans:
-            print(ans.read().rstrip()) # print correct label
-        print(api.GetUTF8Text().rstrip()) # print Tesseract's guess
-        print(api.AllWordConfidences(), '\n') # 0 worst, 100 best
+            print('Actual:', ans.read().rstrip()) # print correct label
+        print('Prediction:', api.GetUTF8Text().rstrip()) # print Tesseract's guess
+        print('Confidence:', str(api.AllWordConfidences()), '\n') # 0 worst, 100 best
 
 # segment letters using OpenCV contours, save segmentations as image
 def cv(filename):
@@ -50,18 +53,23 @@ def cv(filename):
     img_dilation = cv2.dilate(thresh, kernel, iterations=1)
     cv2.imshow('dilated', img_dilation)
     # find contours
-    im2,ctrs, hier = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    im2, ctrs, hier = cv2.findContours(img_dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
     sorted_ctrs = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0]) # sort contours
-    for i, ctr in enumerate(sorted_ctrs):
-        x, y, w, h = cv2.boundingRect(ctr) # Get bounding box
-        roi = image[y:y+h, x:x+w] # Getting ROI
-        # cv2.imshow('segment no:'+str(i),roi) # show ROI
+    for i, ctr in enumerate(ctrs):
+        x, y, w, h = cv2.boundingRect(ctr) # get bounding box
+        roi = image[y:y+h, x:x+w] # getting ROI
+        cv2.imshow('segment no:'+str(i),roi) # show ROI
         cv2.rectangle(image,(x,y),( x + w, y + h ),(0,255,0),2)
         if w > 15 and h > 15: # save contour as image
             cv2.imwrite('{}_roi{}.png'.format(filename[:-4], i), roi)
     cv2.imshow('marked areas', image) # show full image with contour boundaries
     cv2.imwrite(filename, image) # save full image with contour boundaries
-    # cv2.waitKey(0)
+    cv2.waitKey(0)
+    os.chdir(main_dir)
 
+# get Tesseract transcriptions
 for img in images: tess(img)
-cv('a.png')
+
+# segment letters
+seg('a.png')
