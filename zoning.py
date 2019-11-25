@@ -30,7 +30,6 @@ _________________________________
 """
 
 import os, numpy as np, cv2
-from skimage.feature import hog
 
 # your_path_here = '/Users/ovoowo/Desktop/'
 your_path_here = '/Users/Christine/cs/'
