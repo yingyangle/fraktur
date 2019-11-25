@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Nov 24 13:51:33 2019
+
+@author: ovoowo
+"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Nov 24 13:51:33 2019
 @author: ovoowo
 
 Yuezhen Chen & Christine Yang
@@ -36,6 +43,10 @@ your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
+'''=====================================================
+Helpter function
+======================================================'''
+
 THRESHOLD = 75 # adjustable threshold for b/w binary image
 
 # split binary image into 16 sections, return list of section matrices
@@ -63,9 +74,11 @@ def getSections(binary_img):
             sects.append(rows)
     return np.array(sects).flatten()
 
-
+'''=====================================================
+Main section: Please note that the the indices of temp is going down columns...
+======================================================'''
 # get image, convert to binary, split into 16 sections, print sections
-def generate_txt_image(filename):
+def printsection(filename):
     # convert the image to 1s and 0s
     img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     matrix = np.array(img) # np matrix of img vals
@@ -77,6 +90,11 @@ def generate_txt_image(filename):
         print(sects[s])
 
 # execute
-filename = 'hoff_12_e.png'
-generate_txt_image(filename)
+filename = 'hoff_25_e.png'
+printsection(filename)
 
+
+
+
+        
+                        
