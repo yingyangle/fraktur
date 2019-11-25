@@ -51,8 +51,8 @@ def getSections(binary_img):
         for rem in remainder.T: # for each remainder col, add it to the last col
             cols[-1] = np.concatenate((cols[-1], rem), axis=1)
     if num_rows % 4 == 0: # if number of rows divisible by 4
-        rows = [np.vsplit(cols[i], 4) for i in range(4)]
-        return [item for sublist in rows for item in sublist]
+        sects = [np.vsplit(cols[i], 4) for i in range(4)]
+        return [item for sublist in sects for item in sublist]
     else: # if number of rows NOT divisible by 4
         for col in cols: # for each col section
             block = col[:num_rows//4*4] # block of 4 evenly divided rows, w/ remainder left out
@@ -61,11 +61,11 @@ def getSections(binary_img):
             for rem in remainder: # for each remainder crow, add it to the last row
                 rows[-1] = np.concatenate((rows[-1], np.array([rem])), axis=0)
             sects.append(rows)
-    return np.array(sects).flatten()
+    return [np.array(sects).flatten()]
 
 
 # get image, convert to binary, split into 16 sections, print sections
-def generate_txt_image(filename):
+def printSections(filename):
     # convert the image to 1s and 0s
     img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
     matrix = np.array(img) # np matrix of img vals
@@ -77,6 +77,5 @@ def generate_txt_image(filename):
         print(sects[s])
 
 # execute
-filename = 'hoff_12_e.png'
-generate_txt_image(filename)
-
+filename = 'hoff_21_e.png'
+printSections(filename)
