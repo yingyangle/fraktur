@@ -108,7 +108,6 @@ def blackPerImg(filename):
     return np.array(percentages)
 
 
-
 # execute
 filename = 'hoff_25_e.png'
 printSections(filename)
