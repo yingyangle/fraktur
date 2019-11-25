@@ -31,72 +31,64 @@ def getLabels(filename):
     return txt+'{0:#^50}'.format('')
 
 filename = 'hard.png'
-# save each segmented character as separate image, and full image with boundaries drawn on
-def seg(filename, thck=1):
+
+# make image into binary image and adjust for diacritics
+def preprocess(filename):
     os.chdir(main_dir)
     img = cv2.imread('test_data/'+filename) # import image
-    labels = getLabels(filename) # get correct labels
-    os.chdir('letters') # dir to save cropped letter images
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # grayscale
     ret, thresh = cv2.threshold(gray_img, 127, 255, 1) # binary
     # thresh = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
-    cv2.imwrite(filename[:-4]+'_thresh.png', thresh)
     kernel = np.ones((1,1), np.uint8) # image dilation
     dil = cv2.dilate(thresh, kernel, iterations=1) # image dilation
     _, contours, _ = cv2.findContours(dil.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
     nimg = np.array([[x[0] for x in r] for r in img]) # flatten img matrix
-    masks = [] # list to store masks of each char
-    ivals = [] # list of good i indices
-    ii = 0 # index of letter in txt
-    for i in range(len(contours)): pass # for each contour region, save cropped image
-    for i in range(3):
+    # morph dil image to get diacritics
+    for i in range(len(contours)):
+        x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
         mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
-        masks.append(mask) # add to masks list
+        if np.count_nonzero(dil[mask == 0]==0)/len(nimg[mask == 0]) > 0.75:
+            continue # if 80% of region is white (0 = black, since dil is inverted)
+        if y-y+h < len(nimg)/3: # if region really small, it's prob noise blob
+            if y+h < len(nimg)/2: # but if it's a diacritic, drip down
+                xx = x+(w//2) # x center index
+                yy = y+h # y bottom index
+                stop = yy + np.where(dil[:,xx-3][yy+1:]==255)[0][0] # index of first 255 going down from xx,yy
+                dil[:,xx-3][yy-h//2:stop+1] = 255
+                # replace 0s with 255s from center down to first 0
+                # -3 because dots of i's are kinda skewed right usually
+    cv2.imwrite(filename[:-4]+'_thresh.png', dil)
+    return (dil, nimg, img)
+
+# save image for each segmented char, and full image with char boundaries drawn on
+def seg(filename, thck=2):
+    labels = getLabels(filename) # get correct labels
+    dil, nimg, img = preprocess(filename) # get image adjusted for diacritics and made binary
+    os.chdir('letters') # dir to save cropped letter images
+    _, contours, _ = cv2.findContours(dil.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
+    contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
+    ii = 0 # index of letter in txt
+    # for each contour region, save cropped image
+    for i in range(len(contours)):
+        ones = np.ones_like(nimg) # create array of 1s (almost blacks)
+        mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
         out = np.full_like(nimg, 255) # create array of 255s (whites)
         out[mask == 0] = nimg[mask == 0] # where mask is 0, change out value to img value
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
-i=2
-y
-y+h
-x
-x+w
-len(nimg)
-len(roi[0])
-xx = x+(w//2)
-yy = y+h
-dil[yy][xx:]
-stop = xx + np.where(nimg[yy][xx:]==0)[0][0] # index of first 0
-nimg[yy][xx:stop+1] = 0
-        y-y+h
         roi = out[y:y+h, x:x+w] # getting roi
         if np.count_nonzero(dil[mask == 0]==0)/len(nimg[mask == 0]) > 0.75:
             continue # if 80% of region is white (0 = black, since dil is inverted)
         if len(roi) < len(nimg)/3: # if region really small, it's prob noise blob
-            if 0==0: # but if it's a diacritic, combine with previous
-                prev_mask = masks[ivals[-1]] # mask of previous char
-                comb_mask = cv2.drawContours(prev_mask, contours, i, 0, -1) # combined mask
-                comb_out = np.full_like(nimg, 255) # create array of 255s (whites)
-                comb_out[comb_mask == 0] = nimg[comb_mask == 0] # where mask is 0, change out value to img value
-                comb_contour = np.concatenate((contours[i],contours[i-1])).shape # combined contour
-                x, y, w, h = cv2.boundingRect(comb_contour) # get bounding box for cropping
-                roi = out[y:y+h, x:x+w] # getting roi
-                os.remove('{}_{}_{}.png'.format(filename[:-4], i-1, labels[ii-1])) # delete prev img w/o diacritics
-                i -= 1 # use previous index
-                ii -= 1
-            else: continue
-        cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, labels[ii]), roi) # save cropped output image
+            continue
+        if labels[ii] == 'c' and labels[ii+1] == 'h': lab = 'ch' # count 'ch' as one char
+        else: lab = labels[ii]
+        cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full img
-        ivals.append(i) # add i to list of good i indices that are saved
         ii += 1
     cv2.imwrite(filename, img) # save full image with regions drawn in red
     os.chdir(main_dir)
-
-def printVals(matrix):
-    for row in matrix:
-        for col in matrix: print(col)
-
 
 # execute
 # for img in images1: seg(img, 1)
