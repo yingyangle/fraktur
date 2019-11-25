@@ -4,7 +4,7 @@
 Created on Sun Nov 24 13:51:33 2019
 @author: ovoowo
 
-Yuezhen Chen
+Yuezhen Chen & Christine Yang
 Fraktur Cracker
 zoning.py
 section a char image into 16 sections, indexed as follows:
@@ -29,50 +29,53 @@ _________________________________
 
 """
 
-import cv2
+import os, numpy as np, cv2
 from skimage.feature import hog
-import numpy as np
-import os
 
-# os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/letters/E')
-os.chdir('/Users/Christine/cs/fraktur/segmentation/letters/E')
+# your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
+os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
-'''=====================================================
-Helper function
-======================================================'''
-def sectiondivisior(bn):
-    (row, col) = bn.shape
-    if col % 4 == 0: # if column is divisible by 4
-        t = [np.hsplit(bn,4)[i] for i in list(range(0, 4))]
-        if row % 4 == 0: # if row is divisible by 4
-            sec = [np.hsplit(t[i],4)[i] for i in list(range(0, 4))]
-        else: # if row is not divisible by 4
-            block = [t[i][:-(row%4)] for i in list(range(0,len(t)))]
-            r = [t[i][-(row%4):] for i in list(range(0,len(t)))] # store residuals of row%4
-            newt = [np.vsplit(block[i],4) for i in list(range(0, 4))]
-             # concatanate
-             # contains section 3, 7, 11, 15
-            y = [np.concatenate((newt[i][3], r[i]), axis=0) for i in list(range(0, 4))]
-            temp = []
-            for i in range(4):
-                for j in range(4):
-                    if j != 3:
-                        temp.append(newt[i][j])
-                    else:
-                        temp.append(y[i])
-    return temp
-    # else: # if column is not divisible by 4
-    #    block = [t[i][:-(row%4)] for i in list(range(0,len(t)))]
+THRESHOLD = 75 # adjustable threshold for b/w binary image
 
-'''=====================================================
-Main section: Please note that the the indices of temp is going down columns...
-======================================================'''
-def generate_txt_image():
+# split binary image into 16 sections, return list of section matrices
+def getSections(binary_img):
+    num_rows, num_cols = binary_img.shape
+    sects = []
+    if num_cols % 4 == 0: # if number of columns divisible by 4
+        cols = np.hsplit(binary_img, 4)
+    else: # if number of columns NOT divisible by 4
+        block = binary_img[:,:num_cols//4*4] # block of 4 evenly divided cols, w/ remainder left out
+        cols = np.hsplit(block, 4) # split even block into 4 even col sections
+        remainder = np.array([binary_img[:,num_cols//4*4:]]) # leftover cols
+        for rem in remainder.T: # for each remainder col, add it to the last col
+            cols[-1] = np.concatenate((cols[-1], rem), axis=1)
+    if num_rows % 4 == 0: # if number of rows divisible by 4
+        rows = [np.vsplit(cols[i], 4) for i in range(4)]
+        return rows
+    else: # if number of rows NOT divisible by 4
+        for col in cols: # for each col section
+            block = col[:num_rows//4*4] # block of 4 evenly divided rows, w/ remainder left out
+            rows = np.vsplit(block, 4) # split even block into 4 even row sections
+            remainder = np.array(col[num_rows//4*4:]) # leftover rows
+            for rem in remainder: # for each remainder crow, add it to the last row
+                rows[-1] = np.concatenate((rows[-1], np.array([rem])), axis=0)
+            sects.append(rows)
+    return np.array(sects).flatten()
+
+
+# get image, convert to binary, split into 16 sections, print sections
+filename = 'hoff_25_e.png'
+def generate_txt_image(filename):
     # convert the image to 1s and 0s
-    img = cv2.imread('hoff_25_e.png',cv2.IMREAD_GRAYSCALE)
-    matimg=np.array(img)
-    print(matimg)
-    bn = np.where(matimg >= 75, 1, 0)
-    temp = sectiondivisior(bn)
-    print('sections = \n', temp)
-generate_txt_image()
+    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+    matrix = np.array(img) # np matrix of img vals
+    binary_img = np.where(matrix >= THRESHOLD, 11, 88) # convert grayscale img to binary
+    temp = [print(x) for x in binary_img]
+    sects = getSections(binary_img) # list of matrices for each section
+    for s in range(len(sects)):
+        print('\nsection {}'.format(s), '{0:#^20}'.format(''))
+        print(sects[s])
+
+# execute
+generate_txt_image(filename)
