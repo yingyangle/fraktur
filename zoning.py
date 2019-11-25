@@ -61,7 +61,7 @@ def getSections(binary_img):
             for rem in remainder: # for each remainder crow, add it to the last row
                 rows[-1] = np.concatenate((rows[-1], np.array([rem])), axis=0)
             sects.append(rows)
-    return [np.array(sects).flatten()]
+    return np.array(sects).flatten()
 
 def blackPerSect(sects):
     percentages = []
