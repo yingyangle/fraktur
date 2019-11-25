@@ -26,7 +26,7 @@ def getLabels(filename):
     ein = open('test_data/'+txt_file, 'r') # open .txt file
     raw = ein.read().rstrip() # read .txt file
     ein.close()
-    txt = re.sub('[.,\'\" ]', '', raw) # replace spaces and punctuation
+    txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
     # add # chars for extra letters at the end from bad segmentation
     return txt+'{0:#^50}'.format('')
 

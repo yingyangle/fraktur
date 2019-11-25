@@ -9,8 +9,6 @@
 # https://docs.opencv.org/3.4/dd/d49/tutorial_py_contour_features.html
 # https://circuitdigest.com/tutorial/image-segmentation-using-opencv
 # https://stackoverflow.com/questions/28759253/how-to-crop-the-internal-area-of-a-contour
-# https://docs.opencv.org/master/d7/d4d/tutorial_py_thresholding.html
-# https://stackoverflow.com/questions/50432349/combine-contours-vertically-and-get-convex-hull-opencv-python
 
 import os, codecs, numpy as np, cv2, re
 
@@ -30,9 +28,9 @@ def getLabels(filename):
     # add # chars for extra letters at the end from bad segmentation
     return txt+'{0:#^50}'.format('')
 
-filename = 'hard.png'
+filename = 'hoff.png'
 # save each segmented character as separate image, and full image with boundaries drawn on
-def seg(filename, thck=1):
+def seg(filename, thck=2):
     os.chdir(main_dir)
     img = cv2.imread('test_data/'+filename) # import image
     labels = getLabels(filename) # get correct labels
@@ -46,56 +44,22 @@ def seg(filename, thck=1):
     _, contours, _ = cv2.findContours(dil.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
     nimg = np.array([[x[0] for x in r] for r in img]) # flatten img matrix
-    masks = [] # list to store masks of each char
-    ivals = [] # list of good i indices
-    ii = 0 # index of letter in txt
-    for i in range(len(contours)): pass # for each contour region, save cropped image
-    for i in range(3):
+    ii = 0
+    for i in range(len(contours)): # for each contour region, save cropped image
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
         mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
-        masks.append(mask) # add to masks list
         out = np.full_like(nimg, 255) # create array of 255s (whites)
         out[mask == 0] = nimg[mask == 0] # where mask is 0, change out value to img value
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
-i=2
-y
-y+h
-x
-x+w
-len(nimg)
-len(roi[0])
-xx = x+(w//2)
-yy = y+h
-dil[yy][xx:]
-stop = xx + np.where(nimg[yy][xx:]==0)[0][0] # index of first 0
-nimg[yy][xx:stop+1] = 0
-        y-y+h
-        roi = out[y:y+h, x:x+w] # getting roi
+        roi = out[y:y+h, x:x+w] # getting ROI
         if np.count_nonzero(dil[mask == 0]==0)/len(nimg[mask == 0]) > 0.75:
             continue # if 80% of region is white (0 = black, since dil is inverted)
-        if len(roi) < len(nimg)/3: # if region really small, it's prob noise blob
-            if 0==0: # but if it's a diacritic, combine with previous
-                prev_mask = masks[ivals[-1]] # mask of previous char
-                comb_mask = cv2.drawContours(prev_mask, contours, i, 0, -1) # combined mask
-                comb_out = np.full_like(nimg, 255) # create array of 255s (whites)
-                comb_out[comb_mask == 0] = nimg[comb_mask == 0] # where mask is 0, change out value to img value
-                comb_contour = np.concatenate((contours[i],contours[i-1])).shape # combined contour
-                x, y, w, h = cv2.boundingRect(comb_contour) # get bounding box for cropping
-                roi = out[y:y+h, x:x+w] # getting roi
-                os.remove('{}_{}_{}.png'.format(filename[:-4], i-1, labels[ii-1])) # delete prev img w/o diacritics
-                i -= 1 # use previous index
-                ii -= 1
-            else: continue
+        if len(roi) < len(nimg)/3: continue # if region really small, it's prob noise
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, labels[ii]), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full img
-        ivals.append(i) # add i to list of good i indices that are saved
         ii += 1
     cv2.imwrite(filename, img) # save full image with regions drawn in red
     os.chdir(main_dir)
-
-def printVals(matrix):
-    for row in matrix:
-        for col in matrix: print(col)
 
 
 # execute

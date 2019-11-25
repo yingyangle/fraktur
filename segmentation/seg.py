@@ -7,18 +7,29 @@ import os, re, glob, codecs, more_itertools as mit
 from PIL import Image
 
 W = 0 # how many non-whitespace pixels to allow and still count it as whitespace
-os.chdir('/Users/Christine/cs/fraktur/segmentation')
+os.chdir('/Users/Christine/cs/fraktur')
 main_dir = os.getcwd()
+
+# write list of unique chars to .txt file
+def getAlphabet():
+    aus = codecs.open('../char_set.txt', 'w', 'utf-8')
+    aus.write('Number of Unique Chars: ' + str(len(chars_list)))
+    a = [aus.write(x+'\n') for x in chars_list]
+    aus.close()
 
 # get correct letter transcriptions for this line of text
 def getLabels(filename):
-    ein = open(filename)
-    txt = ein.read()[:-1]
+    txt_file = filename[:-4]+'.txt' # get .txt filename
+    ein = open(txt_file, 'r') # open .txt file
+    raw = ein.read().rstrip() # read .txt file
     ein.close()
-    return re.sub(' ', '', txt) + '#############################################'
+    txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
+    # add # chars for extra letters at the end from bad segmentation
+    return txt+'{0:#^50}'.format('')
 
 # (try to) split image line of text into individual letters, one image per letter
 def getLetters(filename):
+    os.chdir(main_dir+'/segmentation/test_data')
     labels = getLabels(filename) # correct transcription
     im = Image.open(filename, 'r') # open image
     width, height = im.size # image size
@@ -39,9 +50,9 @@ def getLetters(filename):
     groups = [list(group) for group in mit.consecutive_groups(whitespace)]
 
     try: # folder for cropped letter images
-        os.mkdir('letters')
-        os.chdir('letters')
-    except: os.chdir('letters')
+        os.mkdir('../letters/man')
+        os.chdir('../letters/man')
+    except: os.chdir('../letters/man')
 
     for i in range(len(groups)-1): # crop letter images
         left = groups[i][-1]
@@ -49,39 +60,47 @@ def getLetters(filename):
         area = (left, 0, right, height)
         cropped_im = im.crop(area)
         # cropped_im.show()
-        imagename = filename[:-4]+' '+str(i)+' '+labels[i]+'.png'
+        imagename = filename[:-4]+'_'+str(i)+'_'+labels[i]+'.png'
         cropped_im.save(imagename)
     os.chdir('..')
 
-# getLetters('hi.png')
-# getLetters('a.png')
-# getLetters('b.png')
-# getLetters('hard.png')
-# getLetters('hard2.png')
-
-
-
 # get set of unique chars appearing in txt files for a book
-def getAlphabet(foldername):
-    os.chdir('../data')
+def getAlphabet(foldernames):
     chars_set = set() # set of unique chars
-    for file in glob.glob("*.txt"): # for each .txt file in this folder
-        ein = codecs.open(file,'r', 'utf-8')
-        raw = ein.read()
-        chars_set.update(raw)
-        ein.close()
-    os.chdir(main_dir)
-    return chars_set
+    if len(foldernames) > 1: # if we get a list of folders
+        [chars_set.update(getAlphabet([x])) for x in foldernames]
+    elif len(foldernames) == 1: # if we get only 1 folder
+        os.chdir(main_dir+'/data/'+foldernames[0])
+        for file in glob.glob("*.txt"): # for each .txt file in this folder
+            ein = codecs.open(file, 'r', 'utf-8')
+            raw = ein.read()
+            chars_set.update(raw)
+            ein.close()
+        return chars_set
+    # write results
+    chars_list = list(chars_set)
+    chars_list.sort()
+    aus = codecs.open(main_dir+'/char_set.txt', 'w', 'utf-8')
+    aus.write('Number of Unique Chars: ' + str(len(chars_list)))
+    temp = [aus.write(x+'\n') for x in chars_list]
+    aus.close()
+    return chars_list
+
+
+### execute ###
+
+# segment letters
+
+os.chdir(main_dir+'/segmentation/test_data')
+images1 = ['a.png', 'b.png', 'hi.png']
+images2 = ['hard.png', 'hard2.png', 'hoff.png']
+
+for img in images1: getLetters(img)
 
 # get set of unique chars
-chars_set = getAlphabet('1797-wackenroder_herzensergiessungen')
-chars_set.union(getAlphabet('1853-rosenkranz_aesthetik'))
-chars_list = list(chars_set)
-chars_list.sort()
 
+os.chdir(main_dir+'/data')
+# folders = ['1797-wackenroder_herzensergiessungen', '1853-rosenkranz_aesthetik']
+folders = [x for x in os.listdir() if x[0] != '.']
 
-# write list of unique chars to .txt file
-aus = codecs.open('../char_set.txt', 'w', 'utf-8')
-aus.write('Number of Unique Chars: ' + str(len(chars_list)))
-a = [aus.write(x+'\n') for x in chars_list]
-aus.close()
+chars_list = getAlphabet(folders)
