@@ -2,8 +2,31 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Nov 24 13:51:33 2019
-
 @author: ovoowo
+
+Yuezhen Chen
+Fraktur Cracker
+zoning.py
+section a char image into 16 sections, indexed as follows:
+
+_________________________________
+|       |       |       |       |
+|   0   |   4   |   8   |   12  |
+|       |       |       |       |
+_________________________________
+|       |       |       |       |
+|   1   |   5   |   9   |   13  |
+|       |       |       |       |
+_________________________________
+|       |       |       |       |
+|   2   |   6   |   10  |   14  |
+|       |       |       |       |
+_________________________________
+|       |       |       |       |
+|   3   |   7   |   11  |   15  |
+|       |       |       |       |
+_________________________________
+
 """
 
 import cv2
@@ -11,22 +34,24 @@ from skimage.feature import hog
 import numpy as np
 import os
 
-os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/letters/E')
+# os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/letters/E')
+os.chdir('/Users/Christine/cs/fraktur/segmentation/letters/E')
+
 '''=====================================================
-Helpter function
+Helper function
 ======================================================'''
 def sectiondivisior(bn):
     (row, col) = bn.shape
-    if col % 4 == 0: #if column is divisible by 4
+    if col % 4 == 0: # if column is divisible by 4
         t = [np.hsplit(bn,4)[i] for i in list(range(0, 4))]
-        if row % 4 == 0: #if row is divisible by 4
+        if row % 4 == 0: # if row is divisible by 4
             sec = [np.hsplit(t[i],4)[i] for i in list(range(0, 4))]
-        else: #if row is not divisible by 4
+        else: # if row is not divisible by 4
             block = [t[i][:-(row%4)] for i in list(range(0,len(t)))]
-            r = [t[i][-(row%4):] for i in list(range(0,len(t)))] #storing the residules of row%4
+            r = [t[i][-(row%4):] for i in list(range(0,len(t)))] # store residuals of row%4
             newt = [np.vsplit(block[i],4) for i in list(range(0, 4))]
-             #concatanate
-             #contains section 3, 7, 11, 15
+             # concatanate
+             # contains section 3, 7, 11, 15
             y = [np.concatenate((newt[i][3], r[i]), axis=0) for i in list(range(0, 4))]
             temp = []
             for i in range(4):
@@ -36,13 +61,14 @@ def sectiondivisior(bn):
                     else:
                         temp.append(y[i])
     return temp
-    #else: #if column is not divisible by 4
-     #   block = [t[i][:-(row%4)] for i in list(range(0,len(t)))]
+    # else: # if column is not divisible by 4
+    #    block = [t[i][:-(row%4)] for i in list(range(0,len(t)))]
+
 '''=====================================================
 Main section: Please note that the the indices of temp is going down columns...
 ======================================================'''
 def generate_txt_image():
-    #convert the image to 1s and 0s
+    # convert the image to 1s and 0s
     img = cv2.imread('hoff_25_e.png',cv2.IMREAD_GRAYSCALE)
     matimg=np.array(img)
     print(matimg)
@@ -50,7 +76,3 @@ def generate_txt_image():
     temp = sectiondivisior(bn)
     print('sections = \n', temp)
 generate_txt_image()
-
-
-        
-                        
