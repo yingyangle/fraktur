@@ -72,7 +72,29 @@ def getSections(binary_img):
             for rem in remainder: # for each remainder crow, add it to the last row
                 rows[-1] = np.concatenate((rows[-1], np.array([rem])), axis=0)
             sects.append(rows)
-    return np.array(sects).flatten()
+    return [np.array(sects).flatten()]
+
+def blackPerSect(sects):
+    percentages = []
+    for i in range(len(sects)):
+        num_nonzero = np.count_nonzero(sects[i])
+        secsize = sects[i].size
+        percentage = (secsize - num_nonzero)/secsize
+        percentages.append(percentage)
+    print('\n The percentage of blackness per section = \n', percentages)
+    return np.array(percentages)
+
+
+def blackPerImg(sects, binary_img):
+    percentages = []
+    for i in range(len(sects)):
+        num_nonzero = np.count_nonzero(sects[i])
+        secsize = sects[i].size
+        imgsize = binary_img.size
+        percentage = (secsize - num_nonzero)/imgsize
+        percentages.append(percentage)
+    print('\n The percentage of blackness per image = \n', percentages)
+    return np.array(percentages)
 
 '''=====================================================
 Main section: Please note that the the indices of temp is going down columns...
@@ -88,11 +110,14 @@ def printSections(filename):
     for s in range(len(sects)):
         print('\nsection {}'.format(s), '{0:#^20}'.format(''))
         print(sects[s])
+    return (sects, binary_img)
 
 # execute
-filename = 'hoff_25_e.png'
-printSections(filename)
 
+filename = 'hoff_12_e.png'
+(sects, binary_img) = printSections(filename)
+blackPerSect(sects)
+blackPerImg(sects, binary_img)
 
 
 

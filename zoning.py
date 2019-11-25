@@ -35,6 +35,7 @@ your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
+    
 THRESHOLD = 75 # adjustable threshold for b/w binary image
 
 # split binary image into 16 sections, return list of section matrices
@@ -62,6 +63,27 @@ def getSections(binary_img):
             sects.append(rows)
     return [np.array(sects).flatten()]
 
+def blackPerSect(sects):
+    percentages = []
+    for i in range(len(sects)):
+        num_nonzero = np.count_nonzero(sects[i])
+        secsize = sects[i].size
+        percentage = (secsize - num_nonzero)/secsize
+        percentages.append(percentage)
+    print('\n The percentage of blackness per section = \n', percentages)
+    return np.array(percentages)
+
+
+def blackPerImg(sects, binary_img):
+    percentages = []
+    for i in range(len(sects)):
+        num_nonzero = np.count_nonzero(sects[i])
+        secsize = sects[i].size
+        imgsize = binary_img.size
+        percentage = (secsize - num_nonzero)/imgsize
+        percentages.append(percentage)
+    print('\n The percentage of blackness per image = \n', percentages)
+    return np.array(percentages)
 
 # get image, convert to binary, split into 16 sections, print sections
 def printSections(filename):
@@ -74,7 +96,14 @@ def printSections(filename):
     for s in range(len(sects)):
         print('\nsection {}'.format(s), '{0:#^20}'.format(''))
         print(sects[s])
+    
+    return (sects, binary_img)
 
 # execute
-filename = 'hoff_21_e.png'
-printSections(filename)
+
+filename = 'hoff_25_e.png'
+(sects, binary_img) = printSections(filename)
+blackPerSect(sects)
+blackPerImg(sects, binary_img)
+#print(type(sects[0]))
+#print(type(sects[0]))
