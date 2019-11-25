@@ -31,7 +31,7 @@ def getFeats(filename):
     feats = np.array([])
     img = cv2.imread(filename)
     num_rows, num_cols, _ = img.shape
-    size = np.array([num_rows / num_cols]) # height/width ratio of image
+    size = np.array([num_rows / num_cols]) # width/height ratio of image
     blackS = blackPerSect(filename) # list of black ratios for each section
     blackI = blackPerImg(filename) # list of black ratios for each section over the whole image
     # dist = getDistance(filename) # edge to char distance
@@ -45,7 +45,7 @@ aus.close()
 aus = open('data.txt', 'a') # write feature data to .txt
 for filename in [x for x in os.listdir() if x[-3:] == 'png']:
     feats = getFeats(filename)
-    aus.write('e, ') # write label as 'e' for now
+    aus.write('0065, ') # write label as 'e' for now (unicode for 'e' = U+0065)
     temp = [aus.write(str(x)+', ') for x in feats[:-1]] # write each feature value
     aus.write(str(feats[-1])+'\n') # write last feature without comma after it
 aus.close()
