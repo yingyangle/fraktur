@@ -31,12 +31,20 @@ _________________________________
 
 import os, numpy as np, cv2
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
+# your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
-    
+
 THRESHOLD = 75 # adjustable threshold for b/w binary image
+
+# get image and change to binary
+def getImg(filename):
+    # convert the image to 1s and 0s
+    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+    matrix = np.array(img) # np matrix of img vals
+    binary_img = np.where(matrix >= THRESHOLD, 1, 0) # convert grayscale img to binary
+    return binary_img
 
 # split binary image into 16 sections, return list of section matrices
 def getSections(binary_img):
@@ -63,47 +71,46 @@ def getSections(binary_img):
             sects.append(rows)
     return np.array(sects).flatten()
 
-def blackPerSect(sects):
-    percentages = []
-    for i in range(len(sects)):
-        num_nonzero = np.count_nonzero(sects[i])
-        secsize = sects[i].size
-        percentage = (secsize - num_nonzero)/secsize
-        percentages.append(percentage)
-    print('\n The percentage of blackness per section = \n', percentages)
-    return np.array(percentages)
-
-
-def blackPerImg(sects, binary_img):
-    percentages = []
-    for i in range(len(sects)):
-        num_nonzero = np.count_nonzero(sects[i])
-        secsize = sects[i].size
-        imgsize = binary_img.size
-        percentage = (secsize - num_nonzero)/imgsize
-        percentages.append(percentage)
-    print('\n The percentage of blackness per image = \n', percentages)
-    return np.array(percentages)
-
-# get image, convert to binary, split into 16 sections, print sections
+# split image into 16 sections and print sections
 def printSections(filename):
-    # convert the image to 1s and 0s
-    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    matrix = np.array(img) # np matrix of img vals
-    binary_img = np.where(matrix >= THRESHOLD, 1, 0) # convert grayscale img to binary
-    temp = [print(x) for x in binary_img]
+    binary_img = getImg(filename)
+    temp = [print(x) for x in binary_img] # print full image
     sects = getSections(binary_img) # list of matrices for each section
-    for s in range(len(sects)):
+    for s in range(len(sects)): # print each image section
         print('\nsection {}'.format(s), '{0:#^20}'.format(''))
         print(sects[s])
-    
     return (sects, binary_img)
 
-# execute
+# get black percentage over each section for list of sections
+def blackPerSect(filename):
+    binary_img = getImg(filename)
+    sects = getSections(binary_img)
+    percentages = [] # list of final black percentages
+    for i in range(len(sects)): # calculate pct for each sect
+        sect_size = sects[i].size
+        percentage = (sect_size - sects[i].sum()) / sect_size
+        percentages.append(percentage)
+    print('\nPercentage Blackness Over Each Section:')
+    temp = [print(x) for x in percentages]
+    return np.array(percentages)
 
+# get black percentage over whole image for list of sections
+def blackPerImg(filename):
+    binary_img = getImg(filename)
+    sects = getSections(binary_img)
+    percentages = [] # list of final black percentages
+    for i in range(len(sects)): # calculate pct for each sect
+        img_size = binary_img.size
+        percentage = (sects[i].size - sects[i].sum()) / img_size
+        percentages.append(percentage)
+    print('\nPercentage Blackness Over Whole Image:')
+    temp = [print(x) for x in percentages]
+    return np.array(percentages)
+
+
+
+# execute
 filename = 'hoff_25_e.png'
-(sects, binary_img) = printSections(filename)
-blackPerSect(sects)
-blackPerImg(sects, binary_img)
-#print(type(sects[0]))
-#print(type(sects[0]))
+printSections(filename)
+blackPerSect(filename)
+blackPerImg(filename)

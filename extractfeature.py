@@ -39,8 +39,8 @@ _________________________________
 import os, numpy as np, cv2
 from skimage.feature import hog
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
+# your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
 '''=====================================================
@@ -118,8 +118,3 @@ filename = 'hoff_21_e.png'
 (sects, binary_img) = printSections(filename)
 blackPerSect(sects)
 blackPerImg(sects, binary_img)
-
-
-
-        
-                        
