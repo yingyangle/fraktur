@@ -160,19 +160,28 @@ def getDirectionDist(subsects, ind, tbcode):
 
 def getDistance(filename):
     binary_img = getImg(filename)
+    binary_img.shape
     (row,col) = binary_img.shape
     sects = getSections(binary_img)
-    print(type(sects))
     top_indices = np.arange(16).reshape((4, 4))
+    top_indices[0]
+
+
 #    bottom_indices = np.flip(np.flip(top_indices), 0)
     left_indices = np.transpose(top_indices)
 #    right_indices = np.flip(np.flip(left_indices), 0)
-    vertical_sects = [sects[top_indices[i]] for i in list(range(4))] #[0,1,2,3],[4,5,6,7],[8,9,10,11],[12,13,14,15]
+    vertical_sects = []
 
-#     left_sects = [sects[left_indices[i]] for i in list(range(4))]
-#     right_sects = [sects[right_indices[i]] for i in list(range(4))]
+    for i in range(4):
+        vertical = []
+        for j in range(4):
+            a = top_indices[i][j]
+            vertical.append(sects[a])
+        vertical_sects.append(np.array(vertical))
+
     topdistsPixel = getDirectionDist(vertical_sects, 0, +1)
     botdistsPixel = getDirectionDist(vertical_sects, 0, -1)
+
     print(' \nFor our reference:\ntop distance in pixels = ' + str(topdistsPixel) + '\nbot distance in pixels = ' +str(botdistsPixel))
     topdistsScale = topdistsPixel/row
     botdistsScale = botdistsPixel/row
@@ -180,7 +189,15 @@ def getDistance(filename):
     return
 
 # execute
-filename = 'hoff_25_e.png'
+# filename = 'hard2_22_n.png'
+# filename = 'hard_5_e.png'
+#filename = 'hard_71_e.png'
+#filename = 'hoff_25_e.png'
+
+filename = 'hoff_12_e.png'
+
+binary_img = getImg(filename)
+getSections(binary_img)
 printSections(filename)
 getDistance(filename)
 blackPerSect(filename)
