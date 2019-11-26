@@ -205,7 +205,7 @@ def getDistance(filename):
     print(' \nFor Training:\nScaled top distance = ' + str(distances[0]) +
     '\nbot distance = ' +str(distances[1])+'\nleft distance = ' +str(distances[2])
     +'\nright distance = ' +str(distances[3]))
-    print('Distances[top, bottom, left, right] =',np.array(distances))
+    print('\nDistances[top, bottom, left, right] =\n',np.array(distances))
     return np.array(distances)
 
 # execute
