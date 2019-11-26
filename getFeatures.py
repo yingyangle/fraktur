@@ -21,8 +21,8 @@ import os, numpy as np, cv2
 from zoning import blackPerSect, blackPerImg
 # from distance import getDistance
 
-# your_path_here = '/Users/ovoowo/Desktop/'
-your_path_here = '/Users/Christine/cs/'
+your_path_here = '/Users/ovoowo/Desktop/'
+#your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation/letters/E')
 
 
@@ -34,7 +34,7 @@ def getFeats(filename):
     size = np.array([num_rows / num_cols]) # width/height ratio of image
     blackS = blackPerSect(filename) # list of black ratios for each section
     blackI = blackPerImg(filename) # list of black ratios for each section over the whole image
-    # dist = getDistance(filename) # edge to char distance
+    dist = getDistance(filename) # edge to char distance
     feats = np.concatenate((size, blackS, blackI))
     return feats
 

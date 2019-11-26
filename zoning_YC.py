@@ -141,22 +141,26 @@ def getDirectionDist(subsects, ind, tbcode):
                                     #second [] for which subsection in each verticle strips
                                     #the [:,int(col/2)] can be changed to adjust which distance you want
         else:
-            temp = subsects[i][movesect][row/2]
+            (row, col) = subsects[i][movesect].shape
+            temp = subsects[i][movesect][int(row/2)]
         firstZeroInd = np.where(temp == 0)[0]
         dist = 0
         while (firstZeroInd.size == 0):
             shape = subsects[i][movesect].shape
             movesect += tbcode
             dist += shape[ind] #top bottom shape = row = 0, right,left shape = col =1
-            temp = subsects[i][movesect][:,0]
+            if ind == 0:
+                temp = subsects[i][movesect][:,int(col/2)]
+            else:
+                temp = subsects[i][movesect][int(row/2)]
             firstZeroInd = np.where(temp == 0)[0]
         if tbcode == 1:
             dists.append(dist+firstZeroInd[0])#store the first zero we find
         else:
-            (row, col) = subsects[i][movesect].shape
-            dists.append(dist+(row - firstZeroInd[-1]-1))
+            shape = subsects[i][movesect].shape
+            dists.append(dist+(shape[ind] - firstZeroInd[-1]-1)) #row for bottom, col for right
     return np.array(dists)
-
+int(15/2)
 
 def getDistance(filename):
     binary_img = getImg(filename)
@@ -165,39 +169,54 @@ def getDistance(filename):
     sects = getSections(binary_img)
     top_indices = np.arange(16).reshape((4, 4))
     top_indices[0]
-
-
-#    bottom_indices = np.flip(np.flip(top_indices), 0)
     left_indices = np.transpose(top_indices)
-#    right_indices = np.flip(np.flip(left_indices), 0)
-    vertical_sects = []
 
+    vertical_sects = []
     for i in range(4):
         vertical = []
         for j in range(4):
-            a = top_indices[i][j]
-            vertical.append(sects[a])
+            vertical.append(sects[top_indices[i][j]])
         vertical_sects.append(np.array(vertical))
 
-    topdistsPixel = getDirectionDist(vertical_sects, 0, +1)
-    botdistsPixel = getDirectionDist(vertical_sects, 0, -1)
 
-    print(' \nFor our reference:\ntop distance in pixels = ' + str(topdistsPixel) + '\nbot distance in pixels = ' +str(botdistsPixel))
-    topdistsScale = topdistsPixel/row
-    botdistsScale = botdistsPixel/row
-    print(' \nFor Training:\nScaled top distance = ' + str(topdistsScale) + '\nbot distance = ' +str(botdistsScale))
-    return
+    h_sects  = []
+    for i in range(4):
+        horizontal = []
+        for j in range(4):
+            a = left_indices[i][j]
+            horizontal.append(sects[a])
+        h_sects.append(horizontal)
+
+    topdistsPixel = getDirectionDist(vertical_sects, 0, 1)
+    botdistsPixel = getDirectionDist(vertical_sects, 0, -1)
+    leftdistsPixel = getDirectionDist(h_sects, 1, 1)
+    rightdistsPixel = getDirectionDist(h_sects, 1, -1)
+
+    print(' \nFor our reference:\ntop distance in pixels = ' + str(topdistsPixel)
+    + '\nbot distance in pixels = ' +str(botdistsPixel) + '\nleft distance in pixels = '
+     +str(leftdistsPixel)+ '\nright distance in pixels = '
+      +str(rightdistsPixel))
+
+    distances = []
+    distances.append(topdistsPixel/row)
+    distances.append(botdistsPixel/row)
+    distances.append(leftdistsPixel/col)
+    distances.append(rightdistsPixel/col)
+    print(' \nFor Training:\nScaled top distance = ' + str(distances[0]) +
+    '\nbot distance = ' +str(distances[1])+'\nleft distance = ' +str(distances[2])
+    +'\nright distance = ' +str(distances[3]))
+    print('Distances[top, bottom, left, right] =',np.array(distances))
+    return np.array(distances)
 
 # execute
-# filename = 'hard2_22_n.png'
-# filename = 'hard_5_e.png'
+#filename = 'hard2_22_n.png'
+#filename = 'hard_5_e.png'
 #filename = 'hard_71_e.png'
 #filename = 'hoff_25_e.png'
 
 filename = 'hoff_12_e.png'
-
 binary_img = getImg(filename)
-getSections(binary_img)
+sects=getSections(binary_img)
 printSections(filename)
 getDistance(filename)
 blackPerSect(filename)
