@@ -18,6 +18,9 @@
 import os, codecs, numpy as np, cv2, re
 from preprocess import preprocess
 
+your_path_here = '/Users/ovoowo/Desktop/'
+#your_path_here = '/Users/Christine/cs/'
+os.chdir(your_path_here+'fraktur/segmentation')
 os.chdir('/Users/Christine/cs/fraktur/segmentation')
 main_dir = os.getcwd()
 divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w'] # letters than tend get divorced
