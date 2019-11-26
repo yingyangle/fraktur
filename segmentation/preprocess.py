@@ -5,13 +5,10 @@
 
 import os, numpy as np, cv2
 
-os.chdir('/Users/Christine/cs/fraktur/segmentation')
-main_dir = os.getcwd()
 
 # takes an image, returns original image, flattened image, and binary grayscale image
 def preprocess(filename):
-    os.chdir(main_dir)
-    img = cv2.imread('test_data/'+filename) # import image
+    img = cv2.imread(filename) # import image
     nimg = np.array([[x[0] for x in r] for r in img]) # flatten img matrix
     # preprocess image
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
