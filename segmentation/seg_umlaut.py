@@ -18,8 +18,8 @@
 import os, codecs, numpy as np, cv2, re
 from preprocess import preprocess
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
+# your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation')
 os.chdir('/Users/Christine/cs/fraktur/segmentation')
 main_dir = os.getcwd()
@@ -107,9 +107,27 @@ def sanityCheckBlend(bin, dims, lab):
         bin[:,boundary_i] = 0
     return (bin, change)
 
+# check for trash contours, return 1 if trash, 0 if not
+def checkTrash(contours, nimg, bin):
+    new_contours = []
+    for iii in range(len(contours)): # remove trash contours
+        x, y, w, h = cv2.boundingRect(contours[iii]) # get bounding box
+        ones = np.ones_like(nimg) # create array of 1s (almost blacks)
+        mask = cv2.drawContours(ones, contours, iii, 0, -1) # color contour area as 0
+        # if 60% of region is white, don't count it (prob inside of 'e', 'd', etc.)
+        if np.count_nonzero(bin[mask == 0]==0) / len(bin[mask == 0]) > 0.6: continue
+        # if it's really small, it's probably noise
+        if h < len(nimg)/10: continue
+        # if fairly small and in bottom half of image, probably noise/punctuation
+        if h < len(nimg)/3:
+            if y+h >= len(nimg)/2: continue
+        new_contours.append(contours[iii]) # if passes all checks, add to new_contours
+    return new_contours
+
 # perform diacritic checks and sanity checks and morph img accordingly
 # return new binary image
-def morph(filename):
+# sanity indicates whether or not to perform sanity checks
+def morph(filename, sanity):
     labels = getLabels(filename) # get correct labels
     img, nimg, bin = preprocess(filename) # get img, flat img, and binary inverted img
     bin_orig = bin.copy()
@@ -119,22 +137,18 @@ def morph(filename):
     ii = 0 # index of letter in labels
     i = 0 # index for contour regions
     next_letter = 1 # how much to increment index to next letter in txt labels
+    diacritic_flag = 0 # whether we performed a diacritic morph on this letter
     divorce_flag = 0 # whether we're currently on a divorced letter
-    diacritic_flag = 0
-    blender_flag = 0
+    blender_flag = 0 # whether we performed a blender morph on this letter
+    contours = checkTrash(contours, nimg, bin) # get rid of trash contours
+    # for i in range(len(contours)): # save contours for testing/debugging
+    #     x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
+    #     cv2.imwrite('temp/'+filename+str(i)+'_'+str(sanity)+'.png',bin[y:y+h, x:x+w])
     while i < len(contours): # for each contour
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         dims = [x, y, w, h] # dimensions of bounding box in list form
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
         mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
-        # if 80% of region is white, don't count it (prob inside of 'e', 'd', etc.)
-        if np.count_nonzero(bin[mask == 0]==0) / len(nimg[mask == 0]) > 0.75:
-            i += 1 # move on to next contour
-            continue
-        # if it's really small, it's probably noise
-        if h < len(nimg)/10 :
-            i += 1 # move on to next contour
-            continue
         lab = labels[ii] # get letter label for current contour
         ### DIACRITIC CHECK ###
         if h < len(nimg)/3: # if region really small, might be noise
@@ -142,17 +156,18 @@ def morph(filename):
                 bin = drip(bin, bin_orig, dims, 0) # drip down to connect it to letter body
                 lab = labels[ii-1] # use prev letter label, since diacritics usually after letter body
                 diacritic_flag = 1 # stay on current letter which is actually the next one
-            else: # if not in top half, it's not a diacritic, just noise
-                i += 1 # move on to next contour
-                continue
-        ### SANITY CHECK for DIVORCEES ###
-        elif lab in divorced: # check for commonly divorced letters
-            if divorce_flag != 1: # =1 means connection already drawn from other half of divorced chunk
-                bin, divorce_flag = sanityCheckDivorce(bin, bin_orig, dims, lab)
-            else: divorce_flag = 0 # exit divorce_flag
-        ### SANITY CHECK for BLENDING ###
-        elif lab in blenders: # check for commonly blended letters
-            bin, blender_flag = sanityCheckBlend(bin, dims, lab)
+        if sanity is 1: # if we wanna perform sanity checks
+            # make sure labels matched correctly, otherwise don't do sanity checks
+            if lab == '#': return morph(filename, 0)
+            if i is len(contours)-1 and labels[ii+1] != '#': return morph(filename, 0)
+            ### SANITY CHECK for DIVORCEES ###
+            if lab in divorced: # check for commonly divorced letters
+                if divorce_flag != 1: # =1 means connection already drawn from other half of divorced chunk
+                    bin, divorce_flag = sanityCheckDivorce(bin, bin_orig, dims, lab)
+                else: divorce_flag = 0 # exit divorce_flag
+            ### SANITY CHECK for BLENDING ###
+            elif lab in blenders: # check for commonly blended letters
+                bin, blender_flag = sanityCheckBlend(bin, dims, lab)
         # determine next_letter increment
         if diacritic_flag == 1: # if this contour was a diacritic mark,
             next_letter = 0 # we're already on the next letter, so stay on it
@@ -163,34 +178,32 @@ def morph(filename):
             next_letter = 2
             blender_flag = 0
         else: next_letter = 1 # otherwise, go on to next letter label
-        ii += next_letter
+        ii += next_letter # move on to next letter in labels
         i += 1 # move on to next contour
     # save resulting binary img after morphological operations
     cv2.imwrite(main_dir+'/letters/'+filename[:-4]+'_morph.png', bin)
+    if sanity == 0: print('Finished:', filename, '** NO SANITY CHECKS **')
+    else: print('Finished:', filename)
     return (img, nimg, bin)
 
-filename = 'hard.png'
-# save image for each segmented char, and full image with char boundaries drawn on
+# # save image for each segmented char, and full image with char boundaries drawn on
 def seg(filename, thck=2):
     labels = getLabels(filename) # get correct labels
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
-    img, nimg, bin = morph(filename)
+    img, nimg, bin = morph(filename, 1)
     os.chdir(main_dir+'/letters') # dir to save cropped letter images
     _, contours, _ = cv2.findContours(bin.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
+    contours = checkTrash(contours, nimg, bin)
     ii = 0 # index of letter in txt
     for i in range(len(contours)): # for each contour region, save cropped img
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
         mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
         out = np.full_like(nimg, 255) # create array of 255s (whites)
-        out[mask == 0] = nimg[mask == 0] # where mask is 0, change out value to img value
+        out[mask == 0] = 1-bin[mask == 0] # where mask is 0, change out value to img value
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
-        roi = out[y:y+h, x:x+w] # getting roi (region of interest)
-        if np.count_nonzero(bin[mask == 0]==0)/len(nimg[mask == 0]) > 0.75:
-            continue # if 80% of region is white (0 = black, since bin is inverted)
-        if len(roi) < len(nimg)/3: # if region really small, it's prob noise blob
-            continue
-        else: lab = labels[ii]
+        roi = out[y:y+h, x:x+w] # getting boxed roi (region of interest)
+        lab = labels[ii]
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full img
         ii += 1
@@ -199,7 +212,8 @@ def seg(filename, thck=2):
 
 # execute
 os.chdir(main_dir+'/test_data') # location of img
-for img in images2:
-    os.chdir(main_dir+'/test_data') # location of img
-    seg(img, 2)
 # seg('hard.png')
+# seg('a.png')
+for img in images2+images1:
+    os.chdir(main_dir+'/test_data') # location of img
+    seg(img)

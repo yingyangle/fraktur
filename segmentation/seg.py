@@ -99,8 +99,8 @@ for img in images1: getLetters(img)
 
 # get set of unique chars
 
-os.chdir(main_dir+'/data')
-# folders = ['1797-wackenroder_herzensergiessungen', '1853-rosenkranz_aesthetik']
-folders = [x for x in os.listdir() if x[0] != '.']
-
-chars_list = getAlphabet(folders)
+# os.chdir(main_dir+'/data')
+# # folders = ['1797-wackenroder_herzensergiessungen', '1853-rosenkranz_aesthetik']
+# folders = [x for x in os.listdir() if x[0] != '.']
+#
+# chars_list = getAlphabet(folders)
