@@ -15,16 +15,18 @@
 
 # thresh = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
 
-import os, codecs, numpy as np, cv2, re
+import os, codecs, numpy as np, cv2, re, sys
 from preprocess import preprocess
+
 
 # your_path_here = '/Users/ovoowo/Desktop/'
 your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/segmentation')
 os.chdir('/Users/Christine/cs/fraktur/segmentation')
 main_dir = os.getcwd()
+np.set_printoptions(threshold=sys.maxsize) # print full np arrays, untruncated
 divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w'] # letters than tend get divorced
-blenders = ['e', 'è', 'é', 'ê', 'ë', 'r', 'v', 'ſ' ] # letters that tend blend into next
+blenders = ['e', 'è', 'é', 'ê', 'ë', 'r', 'v', 'ſ', 't'] # letters that tend blend into next
 images1 = ['a.png', 'b.png', 'hi.png'] # testing images
 images2 = ['hard.png', 'hard2.png', 'hoff.png']
 
@@ -51,6 +53,25 @@ def getLabels(filename):
         i += 1
     return chars_ls # list of letter labels
 
+# get binary img matrix with just the contour filled in
+# inv=0 for non-inverted, inv=1 for inverted
+def getContour(nimg, contour, inv):
+    if inv == 0:
+        ones = np.ones_like(nimg) # create array of 1s (almost blacks)
+        mask = cv2.drawContours(ones, [contour], 0, 0, -1) # color contour area as 0
+        out = np.full_like(nimg, 255) # create array of 255s (whites)
+        out[mask == 0] = nimg[mask == 0] # where mask is 0, change out value to img value
+        x, y, w, h = cv2.boundingRect(contour) # get bounding box for cropping
+        roi = out[y:y+h, x:x+w] # getting boxed roi (region of interest)
+    else:
+        ones = np.ones_like(nimg) # create array of 1s (almost blacks)
+        mask = cv2.drawContours(ones, [contour], 0, 0, -1) # color contour area as 0
+        out = np.full_like(nimg, 0) # create array of 0s (black)
+        out[mask == 0] = 255  # where mask is 0, change out value to white
+        x, y, w, h = cv2.boundingRect(contour) # get bounding box for cropping
+        roi = out[y:y+h, x:x+w] # getting boxed roi (region of interest)
+    return roi
+
 # drip black pixels down or sideways to connect diacritics or gaps within a single letter
 # takes binary inverted img, orig binary inverted img, contour dimensions, and drip direction
 # returns new binary inverted img with drip added
@@ -62,15 +83,16 @@ def drip(bin, bin_orig, dims, dir):
         xx = x+(w//2) # x center index (of contour)
         yy = y+(h//2) # y center index (of contour)
         # index of first 255 pixel going down from xx,yy, aka stopping point
-        stop = y+h + np.where(bin_orig[:,xx-3][y+h+1:]==255)[0][0]
+        try: stop = y+h + np.where(bin_orig[:,xx][y+h+1:]==255)[0][0]
+        except: stop = len(bin_orig)
         # replace 0s in bin with 255s from contour center down to first 0
-        # center adjusted by -3 because dots of i's are kinda skewed right usually
-        bin[:,xx-3][yy:stop+1] = 255
+        bin[:,xx][yy:stop+1] = 255
     if dir == 1: # drip right
         xx = x+(w//2) # x center index (of contour)
         yy = y+(h//2) # y center index (of contour)
         # index of first 255 pixel going right from xx,yy, aka stopping point
-        stop = x+w + np.where(bin_orig[yy][x+w+1:]==255)[0][0]
+        try: stop = x+w + np.where(bin_orig[yy][x+w+1:]==255)[0][0]
+        except: stop = len(bin_orig[0])
         # replace 0s in bin with 255s from contour center down to first 0
         bin[yy][xx:stop+1] = 255
     return bin # return new binary inverted img with drip added
@@ -90,20 +112,31 @@ def sanityCheckDivorce(bin, bin_orig, dims, lab):
     return (bin, change)
 
 # check for e's, r's, v's, and ſ's blending into next letter
-def sanityCheckBlend(bin, dims, lab):
-    x, y, w, h = dims # dimensions of contour bounding box
+def sanityCheckBlend(bin, lab, contour):
+    temp = getContour(bin, contour, 1) # char matrix in bounding box
+    x, y, w, h = cv2.boundingRect(contour) # dimensions of contour bounding box
     ratioThresh = 100 # width/height ratio can't be more than this
-    if lab in ['e', 'r', 'ſ']: ratioThresh = 0.85
+    if lab in ['e', 'r', 'ſ', 't']: ratioThresh = 0.85
     if lab in ['v']: ratioThresh = 1
     ratio = w / h # width/height ratio of char image
     change = 0
-    if ratio > ratioThresh: # if below ratioThresh, drip right
+    if lab == 'ſ':
+        bottom_right = temp[h//2:][w//2:] # bottom right quarter of img
+        top_right = temp[h//20:h//2][:,w//2:] # top right with top 5% cut off
+        blacks = [np.count_nonzero(x) for x in bottom_right] # count black pixels per row
+        if sum(blacks) > bottom_right.size*0.9: # if a good number of blacks in this area,
+            change = 1
+            blacks = np.array([np.count_nonzero(x) for x in top_right])
+            blacks = np.where(blacks==0, 999, blacks)
+            # bin index of row in this char with fewest black pixels
+            boundary_i = np.ma.array(blacks).argmin() + y + h//20
+            bin[boundary_i][x+w//2:x+w] = 0
+    if ratio > ratioThresh: # if above ratioThresh, split it up
         change = 1
-        temp = bin[y:y+h, x:x+w] # char matrix in bounding box
-        mid = temp[:,(w//10):(w-w//10)] # cut of the left and right 10% of the char img
+        mid = temp[:,(w//10):(w-w//10)] # cut off the left and right 10% of the char img
         blacks = [np.count_nonzero(x) for x in mid.T] # count black pixels per col
         # bin index of col in this char with fewest black pixels
-        boundary_i = np.array(blacks).argmin() + w//10 + x
+        boundary_i = np.array(blacks).argmin() + x + w//10
         bin[:,boundary_i] = 0
     return (bin, change)
 
@@ -114,8 +147,10 @@ def checkTrash(contours, nimg, bin):
         x, y, w, h = cv2.boundingRect(contours[iii]) # get bounding box
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
         mask = cv2.drawContours(ones, contours, iii, 0, -1) # color contour area as 0
-        # if 60% of region is white, don't count it (prob inside of 'e', 'd', etc.)
-        if np.count_nonzero(bin[mask == 0]==0) / len(bin[mask == 0]) > 0.6: continue
+        # cv2.imwrite('what.png',bin[y:y+h, x:x+w])
+        # if 40% of region is white, don't count it (prob inside of 'e', 'd', etc.)
+        if np.count_nonzero(bin[mask == 0]==0) / len(bin[mask == 0]) > 0.4:
+            if h < len(nimg)*0.6: continue # mostly white and also small
         # if it's really small, it's probably noise
         if h < len(nimg)/10: continue
         # if fairly small and in bottom half of image, probably noise/punctuation
@@ -157,9 +192,6 @@ def morph(filename, sanity):
                 lab = labels[ii-1] # use prev letter label, since diacritics usually after letter body
                 diacritic_flag = 1 # stay on current letter which is actually the next one
         if sanity is 1: # if we wanna perform sanity checks
-            # make sure labels matched correctly, otherwise don't do sanity checks
-            if lab == '#': return morph(filename, 0)
-            if i is len(contours)-1 and labels[ii+1] != '#': return morph(filename, 0)
             ### SANITY CHECK for DIVORCEES ###
             if lab in divorced: # check for commonly divorced letters
                 if divorce_flag != 1: # =1 means connection already drawn from other half of divorced chunk
@@ -167,7 +199,11 @@ def morph(filename, sanity):
                 else: divorce_flag = 0 # exit divorce_flag
             ### SANITY CHECK for BLENDING ###
             elif lab in blenders: # check for commonly blended letters
-                bin, blender_flag = sanityCheckBlend(bin, dims, lab)
+                bin, blender_flag = sanityCheckBlend(bin, lab, contours[i])
+            # make sure labels matched correctly, otherwise don't do sanity checks
+            if lab == '#': return morph(filename, 0)
+            if i is len(contours)-1 and labels[ii+1] != '#':
+                if blender_flag != 1: return morph(filename, 0)
         # determine next_letter increment
         if diacritic_flag == 1: # if this contour was a diacritic mark,
             next_letter = 0 # we're already on the next letter, so stay on it
@@ -197,23 +233,24 @@ def seg(filename, thck=2):
     contours = checkTrash(contours, nimg, bin)
     ii = 0 # index of letter in txt
     for i in range(len(contours)): # for each contour region, save cropped img
-        ones = np.ones_like(nimg) # create array of 1s (almost blacks)
-        mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
-        out = np.full_like(nimg, 255) # create array of 255s (whites)
-        out[mask == 0] = 1-bin[mask == 0] # where mask is 0, change out value to img value
-        x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
-        roi = out[y:y+h, x:x+w] # getting boxed roi (region of interest)
+        # ones = np.ones_like(nimg) # create array of 1s (almost blacks)
+        # mask = cv2.drawContours(ones, contours, i, 0, -1) # color contour area as 0
+        # out = np.full_like(nimg, 255) # create array of 255s (whites)
+        # out[mask == 0] = nimg[mask == 0]  # where mask is 0, change out value to img value
+        # x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
+        roi = getContour(nimg, contours[i], 0) # getting boxed roi (region of interest)
         lab = labels[ii]
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
-        cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full img
+        cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full nonbinary img
         ii += 1
     cv2.imwrite(filename, img) # save full image with regions drawn in red
     os.chdir(main_dir)
 
 # execute
+filename = 'a.png'
 os.chdir(main_dir+'/test_data') # location of img
 # seg('hard.png')
-# seg('a.png')
+# seg('hi.png')
 for img in images2+images1:
     os.chdir(main_dir+'/test_data') # location of img
     seg(img)
