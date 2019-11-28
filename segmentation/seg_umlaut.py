@@ -220,13 +220,14 @@ def morph(filename, sanity):
     cv2.imwrite(main_dir+'/letters/'+filename[:-4]+'_morph.png', bin)
     if sanity == 0: print('Finished:', filename, '** NO SANITY CHECKS **')
     else: print('Finished:', filename)
-    return (img, nimg, bin)
+    return (img, nimg, bin, sanity)
 
 # # save image for each segmented char, and full image with char boundaries drawn on
 def seg(filename, thck=2):
     labels = getLabels(filename) # get correct labels
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
-    img, nimg, bin = morph(filename, 1)
+    img, nimg, bin, sanity = morph(filename, 1)
+    if sanity == 0: filename = '###' + filename
     os.chdir(main_dir+'/letters') # dir to save cropped letter images
     _, contours, _ = cv2.findContours(bin.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
@@ -247,9 +248,8 @@ def seg(filename, thck=2):
     os.chdir(main_dir)
 
 # execute
-filename = 'a.png'
 os.chdir(main_dir+'/test_data') # location of img
-# seg('hard.png')
+# seg('hard2.png')
 # seg('hi.png')
 for img in images2+images1:
     os.chdir(main_dir+'/test_data') # location of img
