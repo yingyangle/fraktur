@@ -15,14 +15,15 @@
 
 # thresh = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
 
-import os, codecs, numpy as np, cv2, re, sys
+import os, codecs, numpy as np, cv2, re, sys, shutil
 from preprocess import preprocess
+from labelData import labelData
+from wordSeg import wordSeg
 
 
-# your_path_here = '/Users/ovoowo/Desktop/'
-your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/segmentation')
-os.chdir('/Users/Christine/cs/fraktur/segmentation')
+# your_path_here = '/Users/ovoowo/Desktop/fraktur'
+your_path_here = '/Users/Christine/cs/fraktur'
+os.chdir(your_path_here+'/segmentation')
 main_dir = os.getcwd()
 np.set_printoptions(threshold=sys.maxsize) # print full np arrays, untruncated
 divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w'] # letters than tend get divorced
@@ -31,12 +32,20 @@ images1 = ['a.png', 'b.png', 'hi.png'] # testing images
 images2 = ['hard.png', 'hard2.png', 'hoff.png']
 
 # get correct labels from .txt transcription
+# where=0 for non word-segmented imgs, where=1 for word-segemented imgs
 def getLabels(filename):
-    txt_file = filename[:-4]+'.txt' # get .txt filename
-    ein = open(txt_file, 'r') # open .txt file
-    raw = ein.read().rstrip() # read .txt file
-    ein.close()
-    txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
+    try: # non word-segmented imgs
+        int(filename[-5]) 
+        txt_file = filename[:-4]+'.gt.txt' # get .txt filename
+        txt_file = re.sub('\.nrm', '', txt_file)
+        ein = open(txt_file, 'r') # open .txt file
+        raw = ein.read().rstrip() # read .txt file
+        ein.close()
+        txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
+    except ValueError: # word-segmented imgs
+        index = filename.rfind('_') # index of last occurrence of '_' in filename
+        txt = filename[index+1:-4] # letter label of this img
+        txt = re.sub(u'[.,\'\"“„-]', '', txt) # replace punctuation
     # add # chars for extra letters at the end from bad segmentation
     chars_str = txt+'{0:#^50}'.format('')
     chars_ls = [] # chars_str in list form, with digraphs and problem diacritics joined together
@@ -46,12 +55,16 @@ def getLabels(filename):
         if chars_str[i] == 'c' and chars_str[i+1] == 'h':
             chars_ls.append('ch') # treat 'ch' as one char
             i += 1
+        elif chars_str[i] == 'c' and chars_str[i+1] == 'k':
+            chars_ls.append('ck') # treat 'ch' as one char
+            i += 1
         elif chars_str[i] == 'ͤ': # treat this as diacritic, not separate letter
             chars_ls = chars_ls[:-1]
             chars_ls.append(chars_str[i-1]+chars_str[i])
         else: chars_ls.append(chars_str[i])
         i += 1
     return chars_ls # list of letter labels
+
 
 # get binary img matrix with just the contour filled in
 # inv=0 for non-inverted, inv=1 for inverted
@@ -124,14 +137,14 @@ def sanityCheckBlend(bin, lab, contour):
         bottom_right = temp[h//2:][w//2:] # bottom right quarter of img
         top_right = temp[h//20:h//2][:,w//2:] # top right with top 5% cut off
         blacks = [np.count_nonzero(x) for x in bottom_right] # count black pixels per row
-        if sum(blacks) > bottom_right.size*0.9: # if a good number of blacks in this area,
+        if sum(blacks) > bottom_right.size*0.5: # if a good number of blacks in this area,
             change = 1
             blacks = np.array([np.count_nonzero(x) for x in top_right])
             blacks = np.where(blacks==0, 999, blacks)
             # bin index of row in this char with fewest black pixels
             boundary_i = np.ma.array(blacks).argmin() + y + h//20
             bin[boundary_i][x+w//2:x+w] = 0
-    if ratio > ratioThresh: # if above ratioThresh, split it up
+    elif ratio > ratioThresh: # if above ratioThresh, split it up
         change = 1
         mid = temp[:,(w//10):(w-w//10)] # cut off the left and right 10% of the char img
         blacks = [np.count_nonzero(x) for x in mid.T] # count black pixels per col
@@ -149,10 +162,10 @@ def checkTrash(contours, nimg, bin):
         mask = cv2.drawContours(ones, contours, iii, 0, -1) # color contour area as 0
         # cv2.imwrite('what.png',bin[y:y+h, x:x+w])
         # if 40% of region is white, don't count it (prob inside of 'e', 'd', etc.)
-        if np.count_nonzero(bin[mask == 0]==0) / len(bin[mask == 0]) > 0.4:
-            if h < len(nimg)*0.6: continue # mostly white and also small
+        if np.count_nonzero(bin[mask == 0]==0) / len(bin[mask == 0]) > 0.6:
+            continue # mostly white and also small
         # if it's really small, it's probably noise
-        if h < len(nimg)/10: continue
+        if h < len(nimg)/11: continue
         # if fairly small and in bottom half of image, probably noise/punctuation
         if h < len(nimg)/3:
             if y+h >= len(nimg)/2: continue
@@ -162,7 +175,7 @@ def checkTrash(contours, nimg, bin):
 # perform diacritic checks and sanity checks and morph img accordingly
 # return new binary image
 # sanity indicates whether or not to perform sanity checks
-def morph(filename, sanity):
+def morph(filename, destpath, sanity):
     labels = getLabels(filename) # get correct labels
     img, nimg, bin = preprocess(filename) # get img, flat img, and binary inverted img
     bin_orig = bin.copy()
@@ -201,9 +214,13 @@ def morph(filename, sanity):
             elif lab in blenders: # check for commonly blended letters
                 bin, blender_flag = sanityCheckBlend(bin, lab, contours[i])
             # make sure labels matched correctly, otherwise don't do sanity checks
-            if lab == '#': return morph(filename, 0)
+            if lab == '#':
+                cv2.imwrite(destpath+'/###'+filename[:-4]+'_morphSANITY.png', bin)
+                return morph(filename, destpath, 0)
             if i is len(contours)-1 and labels[ii+1] != '#':
-                if blender_flag != 1: return morph(filename, 0)
+                if blender_flag != 1:
+                    cv2.imwrite(destpath+'/###'+filename[:-4]+'_morphSANITY.png', bin)
+                    return morph(filename, destpath, 0)
         # determine next_letter increment
         if diacritic_flag == 1: # if this contour was a diacritic mark,
             next_letter = 0 # we're already on the next letter, so stay on it
@@ -217,18 +234,20 @@ def morph(filename, sanity):
         ii += next_letter # move on to next letter in labels
         i += 1 # move on to next contour
     # save resulting binary img after morphological operations
-    cv2.imwrite(main_dir+'/letters/'+filename[:-4]+'_morph.png', bin)
+    if sanity == 0: filename = '###' + filename
+    cv2.imwrite(destpath+'/'+filename[:-4]+'_morph.png', bin)
     if sanity == 0: print('Finished:', filename, '** NO SANITY CHECKS **')
     else: print('Finished:', filename)
     return (img, nimg, bin, sanity)
 
 # # save image for each segmented char, and full image with char boundaries drawn on
-def seg(filename, thck=2):
-    labels = getLabels(filename) # get correct labels
+def seg(filename, datapath, destpath, thck=2):
+    os.chdir(datapath)
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
-    img, nimg, bin, sanity = morph(filename, 1)
+    img, nimg, bin, sanity = morph(filename, destpath, 1)
+    labels = getLabels(filename) # get correct labels  
     if sanity == 0: filename = '###' + filename
-    os.chdir(main_dir+'/letters') # dir to save cropped letter images
+    os.chdir(destpath) # dir to save cropped letter images
     _, contours, _ = cv2.findContours(bin.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
     contours = sorted(contours, key=lambda ctr: cv2.boundingRect(ctr)[0])
     contours = checkTrash(contours, nimg, bin)
@@ -241,16 +260,44 @@ def seg(filename, thck=2):
         # x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         roi = getContour(nimg, contours[i], 0) # getting boxed roi (region of interest)
         lab = labels[ii]
+        filename = re.sub('\.nrm', '', filename)
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full nonbinary img
         ii += 1
     cv2.imwrite(filename, img) # save full image with regions drawn in red
-    os.chdir(main_dir)
 
 # execute
-os.chdir(main_dir+'/test_data') # location of img
+# os.chdir(main_dir+'/test_data') # location of img
 # seg('hard2.png')
 # seg('hi.png')
-for img in images2+images1:
-    os.chdir(main_dir+'/test_data') # location of img
-    seg(img)
+# for img in images2+images1:
+#     os.chdir(main_dir+'/test_data') # location of img
+#     seg(img)
+
+moot = 0
+os.chdir(your_path_here + '/data') # path to folder with book folders of data
+# for each book folder in 'data'
+for foldername in [x for x in os.listdir() if x[-3:] != 'txt' and x[0] != '.']:
+    try: # make folder in 'letters' to store letter imgs for this book
+        os.mkdir(main_dir+'/letters/'+foldername)
+    except: pass
+    datapath = your_path_here+'/data/'+foldername # path to img/txt data for this book
+    destpath = main_dir+'/letters/'+foldername # path to save segmented letter imgs for this book
+    os.chdir(datapath)
+    for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book 
+        try: os.mkdir('temp') # to store word images
+        except: pass
+        worddatapath = os.getcwd()+'/temp'
+        wordSeg(img, worddatapath) # get word segmented images
+        for wordImg in os.listdir(): # for each word img for this line
+            seg(wordImg, worddatapath, destpath) # segment letters
+        shutil.rmtree(worddatapath)
+        os.chdir(datapath)
+        moot += 1
+        if moot > 5: break
+    labelData(destpath) # separate letter imgs into folders
+    break
+
+# os.system('git add .')
+# os.system('git commit -m "ran seg on more data"')
+# os.system('git push')
