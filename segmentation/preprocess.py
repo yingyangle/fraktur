@@ -28,8 +28,8 @@ def preprocess(filename):
     # cv2.imwrite('bin.png', bin)
     return (img, nimg, bin)
 
-os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data/')
+# os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data/')
 # os.chdir('/Users/Christine/cs/fraktur/segmentation/test_data/')
-images = ['a.png', 'b.png', 'hi.png', 'hard.png', 'hard2.png', 'hoff.png']
-filename ='hi.png'
-preprocess(filename)
+# images = ['a.png', 'b.png', 'hi.png', 'hard.png', 'hard2.png', 'hoff.png']
+# filename ='hi.png'
+# preprocess(filename)

@@ -21,10 +21,10 @@ from labelData import labelData
 from wordSeg import wordSeg
 
 
-your_path_here = '/Users/ovoowo/Desktop/fraktur'
-# your_path_here = '/Users/Christine/cs/fraktur'
+# your_path_here = '/Users/ovoowo/Desktop/fraktur'
+your_path_here = '/Users/Christine/cs/fraktur'
 os.chdir(your_path_here+'/segmentation')
-main_dir = os.getcwd()
+seg_dir = os.getcwd()
 np.set_printoptions(threshold=sys.maxsize) # print full np arrays, untruncated
 divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w'] # letters than tend get divorced
 blenders = ['e', 'è', 'é', 'ê', 'ë', 'r', 'v', 'ſ', 't'] # letters that tend blend into next
@@ -36,8 +36,7 @@ images2 = ['hard.png', 'hard2.png', 'hoff.png']
 def getLabels(filename):
     try: # non word-segmented imgs
         int(filename[-5])
-        txt_file = filename[:-4]+'.gt.txt' # get .txt filename
-        txt_file = re.sub('\.nrm', '', txt_file)
+        txt_file = filename[:-4]+'.txt' # get .txt filename
         ein = open(txt_file, 'r') # open .txt file
         raw = ein.read().rstrip() # read .txt file
         ein.close()
@@ -215,11 +214,11 @@ def morph(filename, destpath, sanity):
                 bin, blender_flag = sanityCheckBlend(bin, lab, contours[i])
             # make sure labels matched correctly, otherwise don't do sanity checks
             if lab == '#':
-                cv2.imwrite(destpath+'/###'+filename[:-4]+'_morphSANITY.png', bin)
+                cv2.imwrite(destpath+'/###'+filename[:-4]+'sanity.png', bin)
                 return morph(filename, destpath, 0)
             if i is len(contours)-1 and labels[ii+1] != '#':
                 if blender_flag != 1:
-                    cv2.imwrite(destpath+'/###'+filename[:-4]+'_morphSANITY.png', bin)
+                    cv2.imwrite(destpath+'/###'+filename[:-4]+'sanity.png', bin)
                     return morph(filename, destpath, 0)
         # determine next_letter increment
         if diacritic_flag == 1: # if this contour was a diacritic mark,
@@ -267,37 +266,34 @@ def seg(filename, datapath, destpath, thck=2):
     cv2.imwrite(filename, img) # save full image with regions drawn in red
 
 # execute
-# os.chdir(main_dir+'/test_data') # location of img
+# os.chdir(seg_dir+'/test_data') # location of img
 # seg('hard2.png')
 # seg('hi.png')
 # for img in images2+images1:
-#     os.chdir(main_dir+'/test_data') # location of img
+#     os.chdir(seg_dir+'/test_data') # location of img
 #     seg(img)
 
-moot = 0
+stopp = 0
 os.chdir(your_path_here + '/data') # path to folder with book folders of data
 # for each book folder in 'data'
-for foldername in [x for x in os.listdir() if x[-3:] != 'txt' and x[0] != '.']:
+for foldername in [x for x in os.listdir() if x[-3:] != 'txt' and x[-2:] != 'py' and x[0] != '.']:
     try: # make folder in 'letters' to store letter imgs for this book
-        os.mkdir(main_dir+'/letters/'+foldername)
+        os.mkdir(seg_dir+'/letters/'+foldername)
     except: pass
     datapath = your_path_here+'/data/'+foldername # path to img/txt data for this book
-    destpath = main_dir+'/letters/'+foldername # path to save segmented letter imgs for this book
+    destpath = seg_dir+'/letters/'+foldername # path to save segmented letter imgs for this book
     os.chdir(datapath)
-    for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book
-        try: os.mkdir('temp') # to store word images
+    for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book/folder
+        try: os.mkdir(your_path_here+'/data/'+foldername+'/temp') # to store word images
         except: pass
-        worddatapath = os.getcwd()+'/temp'
-        wordSeg(img, worddatapath) # get word segmented images
+        worddatapath = your_path_here+'/data/'+foldername+'/temp'
+        wordSeg(img, datapath, worddatapath) # get word segmented images
+        os.chdir(worddatapath)
         for wordImg in os.listdir(): # for each word img for this line
             seg(wordImg, worddatapath, destpath) # segment letters
         shutil.rmtree(worddatapath)
         os.chdir(datapath)
-        moot += 1
-        if moot > 5: break
-    labelData(destpath) # separate letter imgs into folders
-    break
+        stopp += 1
+        if stopp > 3: break
+    labelData(destpath, your_path_here+'/data/letter_data/') # separate letter imgs into folders
 
-# os.system('git add .')
-# os.system('git commit -m "ran seg on more data"')
-# os.system('git push')

@@ -5,14 +5,13 @@
 # wordSeg.py
 # word segmentation
 
-import os, codecs, numpy as np, cv2, re, sys, glob, more_itertools as mit
+import os, numpy as np, cv2, re, more_itertools as mit
 from PIL import Image
 from preprocess import preprocess
 
 # get correct labels from .txt transcription
 def getLabels(filename):
-    txt_file = filename[:-4]+'.gt.txt' # get .txt filename
-    txt_file = re.sub('\.nrm', '', txt_file)
+    txt_file = filename[:-4]+'.txt' # get .txt filename
     ein = open(txt_file, 'r') # open .txt file
     raw = ein.read().rstrip() # read .txt file
     ein.close()
@@ -21,7 +20,10 @@ def getLabels(filename):
     word_ls = txt.split(' ') + ['#', '#', '#', '#', '#']
     return word_ls # list of letter labels
 
-def wordSeg(filename, destpath):
+# segment line img into word imgs
+def wordSeg(filename, datapath, destpath):
+    print('wordSeg', filename)
+    os.chdir(datapath)
     labels = getLabels(filename)
     im = Image.open(filename, 'r') # open image
     width, height = im.size # image size
@@ -35,8 +37,7 @@ def wordSeg(filename, destpath):
     for i in range(len(cols)):
         c = cols[i]
         whites = [x for x in c if x >= 200] # whitespace pixels
-        if len(whites) >= len(c): whitespace.append(i) # allow W non-whitespace
-        # all(x >= 200 for x in c)
+        if len(whites) >= len(c): whitespace.append(i) 
 
     # group consecutive whitespace
     groups = [list(group) for group in mit.consecutive_groups(whitespace)]
@@ -44,13 +45,14 @@ def wordSeg(filename, destpath):
     num_spaces = len(labels) - 6
     spaces_i = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:]
     spaces_i.sort()
-    spaces = [groups[i] for i in spaces_i]
+    # top N largest consecutive whitespace, where N is # spaces in the line
+    spaces = [groups[i] for i in spaces_i] 
 
     os.chdir(destpath)
     # first word
     area = (0, 0, spaces[0][0], height)
     cropped_im = im.crop(area)
-    imagename = filename[:-4]+'_0_'+labels[0]+'.png'
+    imagename = filename[:-4]+'_0'+labels[0]+'.png'
     cropped_im.save(imagename)
     for i in range(len(spaces)-1): # crop letter images
         left = spaces[i][-1]
@@ -58,15 +60,13 @@ def wordSeg(filename, destpath):
         area = (left, 0, right, height)
         cropped_im = im.crop(area)
         # cropped_im.show()
-        imagename = filename[:-4]+'_'+str(i)+'_'+labels[i+1]+'.png'
+        imagename = filename[:-4]+'_'+str(i)+labels[i+1]+'.png'
         cropped_im.save(imagename)
     return
 
-os.chdir('/Users/ovoowo/Desktop/fraktur/data/alpha')
 #os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
 #os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
-filename = 'word.png'
-filename = 'word_1_eine.png'
+# filename = 'word.png'
+# filename = 'word_1_eine.png'
 # getWords(filename, os.getcwd())
-a = cv2.imread('word_1_eine.png')
-# preprocess(filename)
+

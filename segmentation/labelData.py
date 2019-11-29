@@ -5,12 +5,10 @@
 
 import os, re
 
-your_path_here = '/Users/ovoowo/Desktop/fraktur'
+# your_path_here = '/Users/ovoowo/Desktop/fraktur'
 # your_path_here = '/Users/Christine/cs/fraktur'
-os.chdir(your_path_here+'/segmentation/letters/')
-main = os.getcwd()
 
-def labelData(datapath):
+def labelData(datapath, destpath):
     os.chdir(datapath) # path to folder of segmented letter imgs
 
     # each letter .png in folder (don't include filename_morph.png and filename.png)
@@ -24,9 +22,9 @@ def labelData(datapath):
             code = str(ord(label[0])) + '_' + str(ord(label[1]))
         else: code = str(ord(label))
         try: # check if there's a folder for this letter
-            os.chdir(main+'/data/'+code+label)
+            os.chdir(destpath+code+label)
         except: # if not, make one
-            os.mkdir(main+'/data/'+code+label)
-            os.chdir(main+'/data/'+code+label)
+            os.mkdir(destpath+code+label)
+            os.chdir(destpath+code+label)
         # move letter image to its appropriate folder
-        os.rename(datapath+'/'+img, main+'/data/'+code+label+'/'+img)
+        os.rename(datapath+'/'+img, destpath+code+label+'/'+img)
