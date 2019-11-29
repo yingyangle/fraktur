@@ -21,6 +21,7 @@
 import os, codecs, numpy as np, tesserocr, cv2
 from tesserocr import PyTessBaseAPI
 
+
 os.chdir('/Users/Christine/cs/fraktur/segmentation')
 main_dir = os.getcwd()
 

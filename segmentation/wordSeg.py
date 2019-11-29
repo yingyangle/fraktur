@@ -42,10 +42,10 @@ def wordSeg(filename, destpath):
     groups = [list(group) for group in mit.consecutive_groups(whitespace)]
     groups_len = [len(g) for g in groups]
     num_spaces = len(labels) - 6
-    spaces_i = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:] 
+    spaces_i = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:]
     spaces_i.sort()
     spaces = [groups[i] for i in spaces_i]
-    
+
     os.chdir(destpath)
     # first word
     area = (0, 0, spaces[0][0], height)
@@ -62,7 +62,9 @@ def wordSeg(filename, destpath):
         cropped_im.save(imagename)
     return
 
-# os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
+os.chdir('/Users/ovoowo/Desktop/fraktur/data/alpha')
+#os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
+#os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
 filename = 'word.png'
 filename = 'word_1_eine.png'
 # getWords(filename, os.getcwd())
