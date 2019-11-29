@@ -5,16 +5,17 @@
 
 import os, re
 
-your_path_here = '/Users/Christine/cs/fraktur'
+your_path_here = '/Users/ovoowo/Desktop/fraktur'
+# your_path_here = '/Users/Christine/cs/fraktur'
 os.chdir(your_path_here+'/segmentation/letters/')
 main = os.getcwd()
 
 def labelData(datapath):
     os.chdir(datapath) # path to folder of segmented letter imgs
-    
+
     # each letter .png in folder (don't include filename_morph.png and filename.png)
     images = [x for x in os.listdir() if x[-3:] == 'png' and x.count('_')>2]
-    
+
     # for each letter image in the folder
     for img in images:
         index = img.rfind('_') # index of last occurrence of '_' in filename

@@ -21,8 +21,8 @@ from labelData import labelData
 from wordSeg import wordSeg
 
 
-# your_path_here = '/Users/ovoowo/Desktop/fraktur'
-your_path_here = '/Users/Christine/cs/fraktur'
+your_path_here = '/Users/ovoowo/Desktop/fraktur'
+# your_path_here = '/Users/Christine/cs/fraktur'
 os.chdir(your_path_here+'/segmentation')
 main_dir = os.getcwd()
 np.set_printoptions(threshold=sys.maxsize) # print full np arrays, untruncated
@@ -35,7 +35,7 @@ images2 = ['hard.png', 'hard2.png', 'hoff.png']
 # where=0 for non word-segmented imgs, where=1 for word-segemented imgs
 def getLabels(filename):
     try: # non word-segmented imgs
-        int(filename[-5]) 
+        int(filename[-5])
         txt_file = filename[:-4]+'.gt.txt' # get .txt filename
         txt_file = re.sub('\.nrm', '', txt_file)
         ein = open(txt_file, 'r') # open .txt file
@@ -245,7 +245,7 @@ def seg(filename, datapath, destpath, thck=2):
     os.chdir(datapath)
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
     img, nimg, bin, sanity = morph(filename, destpath, 1)
-    labels = getLabels(filename) # get correct labels  
+    labels = getLabels(filename) # get correct labels
     if sanity == 0: filename = '###' + filename
     os.chdir(destpath) # dir to save cropped letter images
     _, contours, _ = cv2.findContours(bin.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # find contour regions
@@ -284,7 +284,7 @@ for foldername in [x for x in os.listdir() if x[-3:] != 'txt' and x[0] != '.']:
     datapath = your_path_here+'/data/'+foldername # path to img/txt data for this book
     destpath = main_dir+'/letters/'+foldername # path to save segmented letter imgs for this book
     os.chdir(datapath)
-    for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book 
+    for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book
         try: os.mkdir('temp') # to store word images
         except: pass
         worddatapath = os.getcwd()+'/temp'
