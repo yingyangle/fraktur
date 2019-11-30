@@ -17,7 +17,7 @@ def getLabels(filename):
     ein.close()
     txt = re.sub(u'[.,\'\"“„-]', '', raw) # replace punctuation
     # add # chars for extra letters at the end from bad segmentation
-    word_ls = txt.split(' ') + ['#', '#', '#', '#', '#']
+    word_ls = txt.split(' ') + ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#']
     return word_ls # list of letter labels
 
 # segment line img into word imgs
@@ -37,7 +37,7 @@ def wordSeg(filename, datapath, destpath):
     for i in range(len(cols)):
         c = cols[i]
         whites = [x for x in c if x >= 200] # whitespace pixels
-        if len(whites) >= len(c): whitespace.append(i) 
+        if len(whites) >= len(c): whitespace.append(i)
 
     # group consecutive whitespace
     groups = [list(group) for group in mit.consecutive_groups(whitespace)]
@@ -46,7 +46,7 @@ def wordSeg(filename, datapath, destpath):
     spaces_i = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:]
     spaces_i.sort()
     # top N largest consecutive whitespace, where N is # spaces in the line
-    spaces = [groups[i] for i in spaces_i] 
+    spaces = [groups[i] for i in spaces_i]
 
     os.chdir(destpath)
     # first word
@@ -64,9 +64,8 @@ def wordSeg(filename, datapath, destpath):
         cropped_im.save(imagename)
     return
 
-#os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
+os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
 #os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
 # filename = 'word.png'
 # filename = 'word_1_eine.png'
 # getWords(filename, os.getcwd())
-

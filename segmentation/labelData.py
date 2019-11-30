@@ -5,7 +5,7 @@
 
 import os, re
 
-# your_path_here = '/Users/ovoowo/Desktop/fraktur'
+your_path_here = '/Users/ovoowo/Desktop/fraktur'
 # your_path_here = '/Users/Christine/cs/fraktur'
 
 def labelData(datapath, destpath):

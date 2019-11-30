@@ -21,9 +21,9 @@ from labelData import labelData
 from wordSeg import wordSeg
 
 
-# your_path_here = '/Users/ovoowo/Desktop/fraktur'
-your_path_here = '/Users/Christine/cs/fraktur'
-os.chdir(your_path_here+'/segmentation')
+your_path_here = '/Users/ovoowo/Desktop/fraktur'
+# your_path_here = '/Users/Christine/cs/fraktur'
+os.chdir(your_path_here+'/segmentation/')
 seg_dir = os.getcwd()
 np.set_printoptions(threshold=sys.maxsize) # print full np arrays, untruncated
 divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w'] # letters than tend get divorced
@@ -34,17 +34,18 @@ images2 = ['hard.png', 'hard2.png', 'hoff.png']
 # get correct labels from .txt transcription
 # where=0 for non word-segmented imgs, where=1 for word-segemented imgs
 def getLabels(filename):
-    try: # non word-segmented imgs
-        int(filename[-5])
-        txt_file = filename[:-4]+'.txt' # get .txt filename
-        ein = open(txt_file, 'r') # open .txt file
-        raw = ein.read().rstrip() # read .txt file
-        ein.close()
-        txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
-    except ValueError: # word-segmented imgs
-        index = filename.rfind('_') # index of last occurrence of '_' in filename
-        txt = filename[index+1:-4] # letter label of this img
-        txt = re.sub(u'[.,\'\"“„-]', '', txt) # replace punctuation
+    print('Name = ',filename)
+    # try: # non word-segmented imgs
+    #     int(filename[-5])
+    #     txt_file = filename[:-4]+'.txt' # get .txt filename
+    #     ein = open(txt_file, 'r') # open .txt file
+    #     raw = ein.read().rstrip() # read .txt file
+    #     ein.close()
+    #     txt = re.sub('[.,\'\"“„ ]', '', raw) # replace spaces and punctuation
+    # except ValueError: # word-segmented imgs
+    index = filename.rfind('_') # index of last occurrence of '_' in filename
+    txt = filename[index+1:-4] # letter label of this img
+    txt = re.sub(u'[.,\'\"“„-]', '', txt) # replace punctuation
     # add # chars for extra letters at the end from bad segmentation
     chars_str = txt+'{0:#^50}'.format('')
     chars_ls = [] # chars_str in list form, with digraphs and problem diacritics joined together
@@ -259,7 +260,7 @@ def seg(filename, datapath, destpath, thck=2):
         # x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         roi = getContour(nimg, contours[i], 0) # getting boxed roi (region of interest)
         lab = labels[ii]
-        filename = re.sub('\.nrm', '', filename)
+#        filename = re.sub('\.nrm', '', filename)
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full nonbinary img
         ii += 1
@@ -284,16 +285,17 @@ for foldername in [x for x in os.listdir() if x[-3:] != 'txt' and x[-2:] != 'py'
     destpath = seg_dir+'/letters/'+foldername # path to save segmented letter imgs for this book
     os.chdir(datapath)
     for img in [x for x in os.listdir() if x[-3:] == 'png']: # for each line img in this book/folder
+        foldername='charlie'
         try: os.mkdir(your_path_here+'/data/'+foldername+'/temp') # to store word images
         except: pass
-        worddatapath = your_path_here+'/data/'+foldername+'/temp'
+        worddatapath = your_path_here+'/data/'+foldername#+'/temp'
         wordSeg(img, datapath, worddatapath) # get word segmented images
         os.chdir(worddatapath)
-        for wordImg in os.listdir(): # for each word img for this line
+        for wordImg in [x for x in os.listdir() if x[-3:] == 'png']: # for each word img for this line
             seg(wordImg, worddatapath, destpath) # segment letters
         shutil.rmtree(worddatapath)
         os.chdir(datapath)
         stopp += 1
-        if stopp > 3: break
+        # if stopp > 3: break
     labelData(destpath, your_path_here+'/data/letter_data/') # separate letter imgs into folders
-
+    break
