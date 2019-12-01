@@ -33,7 +33,7 @@ import os, numpy as np, cv2
 
 your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/segmentation/letters/E')
+os.chdir(your_path_here+'fraktur/features/')
 
 
 THRESHOLD = 75 # adjustable threshold for b/w binary image
@@ -148,19 +148,25 @@ def getDirectionDist(subsects, ind, tbcode):
         while (firstZeroInd.size == 0):
             shape = subsects[i][movesect].shape
             movesect += tbcode
+            if movesect in [-1, 4]:
+                break
             dist += shape[ind] #top bottom shape = row = 0, right,left shape = col =1
             if ind == 0:
                 temp = subsects[i][movesect][:,int(col/2)]
             else:
+                print('Check i ='+str(i)+' \nmovesect = '+str(movesect))
                 temp = subsects[i][movesect][int(row/2)]
             firstZeroInd = np.where(temp == 0)[0]
-        if tbcode == 1:
-            dists.append(dist+firstZeroInd[0])#store the first zero we find
+        if firstZeroInd.size == 0: #in case there's no blackness in that row/column
+            dists.append(dist)
         else:
-            shape = subsects[i][movesect].shape
-            dists.append(dist+(shape[ind] - firstZeroInd[-1]-1)) #row for bottom, col for right
+            if tbcode == 1:
+                dists.append(dist+firstZeroInd[0])#store the first zero we find
+            else:
+                shape = subsects[i][movesect].shape
+                dists.append(dist+(shape[ind] - firstZeroInd[-1]-1)) #row for bottom, col for right
     return np.array(dists)
-int(15/2)
+
 
 def getDistance(filename):
     binary_img = getImg(filename)
@@ -176,7 +182,8 @@ def getDistance(filename):
         vertical = []
         for j in range(4):
             vertical.append(sects[top_indices[i][j]])
-        vertical_sects.append(np.array(vertical))
+        # vertical_sects.append(np.array(vertical))
+        vertical_sects.append(vertical)
 
 
     h_sects  = []
@@ -212,12 +219,11 @@ def getDistance(filename):
 #filename = 'hard2_22_n.png'
 #filename = 'hard_5_e.png'
 #filename = 'hard_71_e.png'
-#filename = 'hoff_25_e.png'
+filename = 'a_4_i.png'
 
-filename = 'hoff_12_e.png'
+# filename = 'hoff_12_e.png'
 binary_img = getImg(filename)
 sects=getSections(binary_img)
-printSections(filename)
 getDistance(filename)
 blackPerSect(filename)
 blackPerImg(filename)
