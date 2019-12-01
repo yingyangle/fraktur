@@ -1,4 +1,4 @@
-# Christine Yang
+# Christine Yang, Yuezhen Chen
 # Fraktur Cracker
 # getFeatures.py
 # get features for each char image
@@ -41,10 +41,6 @@ def getFeats(filename):
 
 
 # execute
-# filename = 'hoff_21_e.png'
-# aus = open('data.txt', 'w')
-# aus.close()
-# aus = open('data.txt', 'a') # write feature data to .txt
 sizes = []
 blackIs = []
 dists = []
@@ -57,11 +53,6 @@ for filename in [x for x in os.listdir() if x[-3:] == 'png']:
     blackIs.append(blackI)
     dists.append(dist)
 
-# dictionary of lists
 dict = {'size': sizes, 'blackness': blackIs, 'distance': dists}
 df = pd.DataFrame(dict)
 df.to_csv('testdata.csv', header=False, index=False)
-#    aus.write('0065, ') # write label as 'e' for now (unicode for 'e' = U+0065)
-#    temp = [aus.write(str(x)+', ') for x in feats[:-1]] # write each feature value
-#    aus.write(str(feats[-1])+'\n') # write last feature without comma after it
-#aus.close()
