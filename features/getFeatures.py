@@ -18,12 +18,13 @@
 #       - # pixels (distance) from right edge of image to outer edge of char
 
 import os, numpy as np, cv2
-from zoning import blackPerSect, blackPerImg
+from zoning_YC import blackPerSect, blackPerImg, getDistance
+import pandas as pd
 # from distance import getDistance
 
 your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/segmentation/letters/E')
+os.chdir(your_path_here+'fraktur/letters_for_testing')
 
 
 # get features for a char image
@@ -35,17 +36,32 @@ def getFeats(filename):
     blackS = blackPerSect(filename) # list of black ratios for each section
     blackI = blackPerImg(filename) # list of black ratios for each section over the whole image
     dist = getDistance(filename) # edge to char distance
-    feats = np.concatenate((size, blackS, blackI))
-    return feats
+    #feats = np.concatenate((size, blackS, blackI))
+    return (size,blackI,dist)
+
 
 # execute
-filename = 'hoff_21_e.png'
-aus = open('data.txt', 'w')
-aus.close()
-aus = open('data.txt', 'a') # write feature data to .txt
+# filename = 'hoff_21_e.png'
+# aus = open('data.txt', 'w')
+# aus.close()
+# aus = open('data.txt', 'a') # write feature data to .txt
+sizes = []
+blackIs = []
+dists = []
+bugcheck = 0
 for filename in [x for x in os.listdir() if x[-3:] == 'png']:
-    feats = getFeats(filename)
-    aus.write('0065, ') # write label as 'e' for now (unicode for 'e' = U+0065)
-    temp = [aus.write(str(x)+', ') for x in feats[:-1]] # write each feature value
-    aus.write(str(feats[-1])+'\n') # write last feature without comma after it
-aus.close()
+    bugcheck += 1
+    print('This is the '+ str(bugcheck)+' image',filename)
+    size,blackI,dist = getFeats(filename)
+    sizes.append(size)
+    blackIs.append(blackI)
+    dists.append(dist)
+
+# dictionary of lists
+dict = {'size': sizes, 'blackness': blackIs, 'distance': dists}
+df = pd.DataFrame(dict)
+df.to_csv('testdata.csv', header=False, index=False)
+#    aus.write('0065, ') # write label as 'e' for now (unicode for 'e' = U+0065)
+#    temp = [aus.write(str(x)+', ') for x in feats[:-1]] # write each feature value
+#    aus.write(str(feats[-1])+'\n') # write last feature without comma after it
+#aus.close()
