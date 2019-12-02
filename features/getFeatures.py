@@ -27,26 +27,35 @@ your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/letters_for_testing')
 
-
 # get features for a char image
-def getFeats(filename):
+def getFeats(filename,n):
     feats = np.array([])
     img = cv2.imread(filename)
     num_rows, num_cols, _ = img.shape
     size = np.array([num_rows / num_cols]) # width/height ratio of image
 #    blackS = blackPerSect(filename) # list of black ratios for each section
-    black = blackPerImg(filename) # list of black ratios for each section over the whole image
-    dist = getDistance(filename) # edge to char distance
-    feats = np.concatenate((size, black, dist))
-    return feats
+    black = blackPerImg(filename,n) # list of black ratios for each section over the whole image
+    dist = getDistance(filename,n) # edge to char distance
+    # feats = np.concatenate((size, black, dist))
+    label =np.array([ord(filename[-5:-4])])
+    # print('label = ',label)
+    # data = np.concatenate((feats,label))
+    # print('data = ',data)
+    # return data
+    return (black,dist,label)
+
 
 # execute
-features = []
+Bdataset = []
+Ddataset = []
 letters = []
 for filename in [x for x in os.listdir() if x[-3:] == 'png']:
     letters.append(filename[-5:-4])
-    feats = getFeats(filename)
-    features.append(feats)
+    (black,dist,label) = getFeats(filename,8)
+    Bdata = np.concatenate((black,label))
+    Ddata = np.concatenate((dist,label))
+    Bdataset.append(Bdata)
+    Ddataset.append(Ddata)
 freq ={}
 for l in letters:
     keys = freq.keys()
@@ -56,8 +65,10 @@ for l in letters:
         freq[l] = 1
 print(freq)
 print(len(freq.keys()))
-data = np.array(features)
-np.savetxt('testdata.txt',data, delimiter=', ', fmt='%12.8f')
+Btestdata = np.array(Bdataset)
+Dtestdata = np.array(Ddataset)
+np.savetxt('blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
+np.savetxt('distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
 #dict = {'features': features}
 #df = pd.DataFrame(dict)
 #df.to_csv('testdata.csv', header=False, index=False, sep=",",escapechar=" ",quoting=csv.QUOTE_NONE)

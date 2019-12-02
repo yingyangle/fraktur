@@ -6,28 +6,32 @@ Yuezhen Chen
 
 import numpy as np
 import pickle
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
-from skimage import exposure
 import cv2
 import matplotlib.pyplot as plt
+import os, math
+your_path_here = '/Users/ovoowo/Desktop/'
+#your_path_here = '/Users/Christine/cs/'
+os.chdir(your_path_here+'fraktur/letters_for_testing/')
 
-your_path_here = '/Users/ovoowo/Desktop/fraktur'
-# your_path_here = '/Users/Christine/cs/fraktur'
 
-file =
-dataset = np.loadtxt(file,delimiter=',')
+Bfilename = 'blacktestdata.txt'
+Dfilename = 'distancetestdata.txt'
+dataset = np.loadtxt(Bfilename, delimiter = ',')
+#dataset = np.loadtxt(Dfilename, delimiter = ',')
 (numSamples, numFeatures) = dataset.shape
-data = dataset[:,range(2)].reshape((numSamples, 2)) #vector X
-# print(data)
-labels = dataset[:, 2].reshape((numSamples,))
-
+data = dataset[:,range(numFeatures-1)].reshape((numSamples,  numFeatures-1)) #vector X
+labels = dataset[:, -1].reshape((numSamples,))
 # take the data and construct the training and testing split, using 75% of the
 # data for training and 25% for testing
 
 (trainData, testData, trainLabels, testLabels) = train_test_split(data,
-labels , test_size=0.25, random_state=42)
+labels, test_size=0.25, random_state=42)
+
+(trainData, valData, trainLabels, valLabels) = train_test_split(trainData, trainLabels,
+test_size=0.1, random_state=84)
 
 # show the sizes of each data split
 
@@ -45,7 +49,7 @@ accuracies = []
 for k in range(1, 30, 2):
           # train the k-Nearest Neighbor classifier with the current value of `k`
           clf = KNeighborsClassifier(n_neighbors=k)
-          lfc.fit(trainData, trainLabels)
+          clf.fit(trainData, trainLabels)
           # evaluate the model and update the accuracies list
           score = clf.score(valData, valLabels)
           print("k=%d, accuracy=%.2f%%" % (k, score * 100))
@@ -63,20 +67,30 @@ model.fit(trainData, trainLabels)
 predictions = model.predict(testData)
 # show a final classification report demonstrating the accuracy of the classifier
 # for each of the digits
-print(Evaluation on Test Data")
-print(classification_report(testLabels, predictions))
+print('\nEvaluation on Test Data')
+charLabels = np.array([chr(int(testLabels[i])) for i in range(testLabels.size)])
+charPredictions = np.array([chr(int(predictions[i])) for i in range(predictions.size)])
+print(classification_report(charLabels, charPredictions))
 
 # loop over a few random digits
 for i in np.random.randint(0, high=len(testLabels), size=(5,)):
          # grab the image and classify it
          image = testData[i]
-         prediction = model.predict([image])[0]
+         prediction = int(model.predict([image])[0])
+         # convert the image for a 64-dim array to an 8 x 8 image compatible with OpenCV,
+         # then resize it to 32 x 32 pixels so we can see it better
+##         image = image.reshape((64, 64))
+##         image = exposure.rescale_intensity(image, out_range=(0, 255))
+##         image = imutils.resize(image, width=32, inter=cv2.INTER_CUBIC)
+
          # show the prediction
-         imgdata = np.array(image, dtype='float')
-         pixels = imgdata.reshape((8,8))
-         plt.imshow(pixels,cmap='gray')
-         plt.annotate(prediction,(3,3),bbox={'facecolor':'white'},fontsize=16)
-         print("Model predict the letter is : {}".format(prediction))
+
+         # imgdata = np.array(image, dtype='float')
+         # d = int(math.sqrt(numFeatures-1))
+         # pixels = imgdata.reshape((d,d))
+         # plt.imshow(pixels,cmap='gray')
+         # plt.annotate(prediction,(3,3),bbox={'facecolor':'white'},fontsize=16)
+         print("i think tha letter is : {}".format(chr(prediction))+'\nThe actual value is :'+chr(int(testLabels[i])))
+
          #cv2.imshow("image", image)
          plt.show()
-         cv2.waitKey(0)
