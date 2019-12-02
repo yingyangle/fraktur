@@ -20,6 +20,7 @@
 import os, numpy as np, cv2
 from zoning_YC import blackPerSect, blackPerImg, getDistance
 import pandas as pd
+import csv
 # from distance import getDistance
 
 your_path_here = '/Users/ovoowo/Desktop/'
@@ -33,26 +34,30 @@ def getFeats(filename):
     img = cv2.imread(filename)
     num_rows, num_cols, _ = img.shape
     size = np.array([num_rows / num_cols]) # width/height ratio of image
-    blackS = blackPerSect(filename) # list of black ratios for each section
-    blackI = blackPerImg(filename) # list of black ratios for each section over the whole image
+#    blackS = blackPerSect(filename) # list of black ratios for each section
+    black = blackPerImg(filename) # list of black ratios for each section over the whole image
     dist = getDistance(filename) # edge to char distance
-    #feats = np.concatenate((size, blackS, blackI))
-    return (size,blackI,dist)
-
+    feats = np.concatenate((size, black, dist))
+    return feats
 
 # execute
-sizes = []
-blackIs = []
-dists = []
-bugcheck = 0
+features = []
+letters = []
 for filename in [x for x in os.listdir() if x[-3:] == 'png']:
-    bugcheck += 1
-    print('This is the '+ str(bugcheck)+' image',filename)
-    size,blackI,dist = getFeats(filename)
-    sizes.append(size)
-    blackIs.append(blackI)
-    dists.append(dist)
-
-dict = {'size': sizes, 'blackness': blackIs, 'distance': dists}
-df = pd.DataFrame(dict)
-df.to_csv('testdata.csv', header=False, index=False)
+    letters.append(filename[-5:-4])
+    feats = getFeats(filename)
+    features.append(feats)
+freq ={}
+for l in letters:
+    keys = freq.keys()
+    if l in keys:
+        freq[l] += 1
+    else:
+        freq[l] = 1
+print(freq)
+print(len(freq.keys()))
+data = np.array(features)
+np.savetxt('testdata.txt',data, delimiter=', ', fmt='%12.8f')
+#dict = {'features': features}
+#df = pd.DataFrame(dict)
+#df.to_csv('testdata.csv', header=False, index=False, sep=",",escapechar=" ",quoting=csv.QUOTE_NONE)

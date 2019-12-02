@@ -154,7 +154,6 @@ def getDirectionDist(subsects, ind, tbcode):
             if ind == 0:
                 temp = subsects[i][movesect][:,int(col/2)]
             else:
-                print('Check i ='+str(i)+' \nmovesect = '+str(movesect))
                 temp = subsects[i][movesect][int(row/2)]
             firstZeroInd = np.where(temp == 0)[0]
         if firstZeroInd.size == 0: #in case there's no blackness in that row/column
@@ -204,15 +203,17 @@ def getDistance(filename):
      +str(leftdistsPixel)+ '\nright distance in pixels = '
       +str(rightdistsPixel))
 
-    distances = []
-    distances.append(topdistsPixel/row)
-    distances.append(botdistsPixel/row)
-    distances.append(leftdistsPixel/col)
-    distances.append(rightdistsPixel/col)
-    print(' \nFor Training:\nScaled top distance = ' + str(distances[0]) +
-    '\nbot distance = ' +str(distances[1])+'\nleft distance = ' +str(distances[2])
-    +'\nright distance = ' +str(distances[3]))
-    print('\nDistances[top, bottom, left, right] =\n',np.array(distances))
+    distances = np.concatenate((topdistsPixel/row, botdistsPixel/row), axis=None)
+    distances = np.concatenate((distances,leftdistsPixel/col),axis=None)
+    distances = np.concatenate((distances,rightdistsPixel/col),axis=None)
+    # distances.append(topdistsPixel/row)
+    # distances.append(botdistsPixel/row)
+    # distances.append(leftdistsPixel/col)
+    # distances.append(rightdistsPixel/col)
+    print(' \nFor Training:\nScaled top distance = ' + str(distances[0:4]) +
+    '\nbot distance = ' +str(distances[4:8])+'\nleft distance = ' +str(distances[8:12])
+    +'\nright distance = ' +str(distances[12:16]))
+    print('\nDistances[top, bottom, left, right] =\n',distances)
     return np.array(distances)
 
 # execute
