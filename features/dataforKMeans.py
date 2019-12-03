@@ -12,4 +12,4 @@ subFolders= os.listdir(path)
 Folder = subFolders[1]
 print(Folder)
 datapath = path+Folder
-txtGenerator(datapath,0,Folder)
+txtGenerator(datapath,0,Folder,8)

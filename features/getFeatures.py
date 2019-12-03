@@ -38,10 +38,9 @@ def getFeats(filename,n):
     label =np.array([ord(filename[-5:-4])])
     return (black,dist,label)
 
-
 # execute
 #datapath to folder that store image
-def txtGenerator(datapath,mode,foldername): #mode = 0 no label, mode = 1 with labels
+def txtGenerator(datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with labels
     os.chdir(datapath)
     Bdataset = []
     Ddataset = []
@@ -51,14 +50,15 @@ def txtGenerator(datapath,mode,foldername): #mode = 0 no label, mode = 1 with la
     exceptions = [] #store error images
 
     #Error handler
-    aus = open(your_path_here+'/errors.txt', 'w')
+    name = foldername+'errors.txt'
+    aus = open(your_path_here+'/'+name, 'w')
     aus.close()
 
     for filename in [x for x in os.listdir() if x[-3:] == 'png']:
         tracker += 1
         try:
             letters.append(filename[-5:-4])
-            (black,dist,label) = getFeats(filename,8)
+            (black,dist,label) = getFeats(filename,n)
             if mode == 1:
                 Bdata = np.concatenate((black,label))
                 Ddata = np.concatenate((dist,label))
@@ -69,7 +69,7 @@ def txtGenerator(datapath,mode,foldername): #mode = 0 no label, mode = 1 with la
                 Ddataset.append(dist)
         except:
             exceptions.append(filename)
-            aus = open(your_path_here+'/errors.txt', 'a')
+            aus = open(your_path_here+'/'+name, 'a')
             aus.write(filename + '\n')
             aus.close()
         print(str(tracker)+' images/ '+str(nImg)+' images done')
@@ -89,5 +89,5 @@ def txtGenerator(datapath,mode,foldername): #mode = 0 no label, mode = 1 with la
     temp = [print(x) for x in exceptions]
     print('Total '+str(len(exceptions))+' Error \n'+'='*40)
 
-    np.savetxt(your_path_here+foldername+'_blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
-    np.savetxt(your_path_here+foldername+'_distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
+    np.savetxt(your_path_here+foldername+str(n)+'_blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
+    np.savetxt(your_path_here+foldername+str(n)+'_distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
