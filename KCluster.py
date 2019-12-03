@@ -1,6 +1,6 @@
 from sklearn.cluster import KMeans
 from sklearn import metrics
-import os
+import os,shutil
 your_path_here = '/Users/ovoowo/Desktop/fraktur/'
 #your_path_here = '/Users/Christine/cs/fraktur/'
 datapath = your_path_here+'features/'
@@ -66,7 +66,7 @@ def kMeanclf(X,n):
     counts = np.bincount(labels)
     return (np.argmax(counts),counts,labels)
 (xbL, xbA,labelsB) = kMeanclf(Xb,3)
-(xdL, xdA,labelsD) = kMeanclf(Xd,5)
+(xdL, xdA,labelsD) = kMeanclf(Xd,3)
 correctL.append(xbL)
 correctL.append(xdL)
 allL.append(xbA)
@@ -85,4 +85,22 @@ subFolders= os.listdir(path)
 Folder = subFolders[1]
 datapath = path+Folder
 reLabel(labelsB,labelsD,Folder,datapath)
+sourcepath = path+Folder
+destpath =your_path_here+'fraktur/data/goodd'
+os.chdir(sourcepath)#access folder of letter
+imgs = np.array([x for x in os.listdir(sourcepath) if x[-6:] == '{}{}.png'.format(correctL[0],correctL[1]) and x[:3] !='###'])
+
+###2nd try:
+# allL[1] = np.array(allL[1].tolist().remove(correctL[1]))
+# new = max(allL[1].tolist())
+
+# imgs = np.array([x for x in os.listdir(sourcepath) if x[-6:] == '{}{}.png'.format(correctL[0],new) and x[:3] !='###'])
+#imgs2 = np.array([x for x in os.listdir(sourcepath) if x[-6:] == '{}{}.png'.format(1,2) and x[:3] !='###'])
+#imgs = np.concatenate(imgs,imgs2)
+total = imgs.size
+counter = 0
+for img in imgs:
+    shutil.copy(img, destpath) #copy every image to the dataset folder
+    counter += 1
+    print(str(counter)+' images/ '+str(total)+' images moved\t')
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
