@@ -51,18 +51,18 @@ def getImg(filename,n):
     if col//n ==0:
         r = (n-col)//2 #0
         l = n - col - r #1
-        print('n = '+str(n)+'\ncol = '+str(col)+'\nr = '+str(r)+'\nl = ',l)
+        #print('n = '+str(n)+'\ncol = '+str(col)+'\nr = '+str(r)+'\nl = ',l)
         if(r!=0):
             a = binary_img
             b = np.where(np.zeros((row,col+r))==0,1,0)
             b[:,:-r] = a
         else:
             b = binary_img
-        print(b.shape)
+#        print(b.shape)
         resizedImg = np.where(np.zeros((row,n))==0,1,0)
-        print(resizedImg.shape)
+#        print(resizedImg.shape)
         resizedImg[:,l:] = b
-        print('resizedImg =\n',resizedImg)
+#        print('resizedImg =\n',resizedImg)
         binary_img = resizedImg
     ####
     return binary_img
@@ -111,8 +111,8 @@ def blackPerSect(filename,n):
         sect_size = sects[i].size
         percentage = (sect_size - sects[i].sum()) / sect_size
         percentages.append(percentage)
-    print('\nPercentage Blackness Over Each Section:')
-    temp = [print(x) for x in percentages]
+#    print('\nPercentage Blackness Over Each Section:')
+#    temp = [print(x) for x in percentages]
     return np.array(percentages)
 
 # get black percentage over whole image for list of sections
@@ -124,8 +124,8 @@ def blackPerImg(filename,n):
         img_size = binary_img.size
         percentage = (sects[i].size - sects[i].sum()) / img_size
         percentages.append(percentage)
-    print('\nPercentage Blackness Over Whole Image:')
-    temp = [print(x) for x in percentages]
+#    print('\nPercentage Blackness Over Whole Image:')
+#    temp = [print(x) for x in percentages]
     return np.array(percentages)
 
 '''
@@ -238,11 +238,11 @@ def getDistance(filename,n):
 #filename = 'hard2_22_n.png'
 #filename = 'hard_5_e.png'
 #filename = 'hard_71_e.png'
-filename = 'a_4_i.png'
+# filename = 'a_4_i.png'
 
 # filename = 'hoff_12_e.png'
-binary_img = getImg(filename,n)
-sects=getSections(binary_img,n)
-getDistance(filename,n)
-blackPerSect(filename,n)
-blackPerImg(filename,n)
+# binary_img = getImg(filename,n)
+# sects=getSections(binary_img,n)
+# getDistance(filename,n)
+# blackPerSect(filename,n)
+# blackPerImg(filename,n)
