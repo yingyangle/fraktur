@@ -23,9 +23,10 @@ import pandas as pd
 import csv
 # from distance import getDistance
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/letters_for_testing')
+your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+#your_path_here = '/Users/Christine/cs/fraktur/'
+datapath = your_path_here+'data/dataset'
+os.chdir(datapath)
 
 # get features for a char image
 def getFeats(filename,n):
@@ -49,13 +50,29 @@ def getFeats(filename,n):
 Bdataset = []
 Ddataset = []
 letters = []
+nImg = len(os.listdir())
+tracker = 0
+exceptions = [] #store error images
+
+#Error handler
+aus = open(your_path_here+'/errors.txt', 'w')
+aus.close()
+
 for filename in [x for x in os.listdir() if x[-3:] == 'png']:
-    letters.append(filename[-5:-4])
-    (black,dist,label) = getFeats(filename,8)
-    Bdata = np.concatenate((black,label))
-    Ddata = np.concatenate((dist,label))
-    Bdataset.append(Bdata)
-    Ddataset.append(Ddata)
+    tracker += 1
+    try:
+        letters.append(filename[-5:-4])
+        (black,dist,label) = getFeats(filename,8)
+        Bdata = np.concatenate((black,label))
+        Ddata = np.concatenate((dist,label))
+        Bdataset.append(Bdata)
+        Ddataset.append(Ddata)
+    except:
+        exceptions.append(filename)
+        aus = open(your_path_here+'/errors.txt', 'a')
+        aus.write(filename + '\n')
+        aus.close()
+    print(str(tracker)+' images/ '+str(nImg)+' images done')
 freq ={}
 for l in letters:
     keys = freq.keys()
@@ -63,12 +80,16 @@ for l in letters:
         freq[l] += 1
     else:
         freq[l] = 1
-print(freq)
-print(len(freq.keys()))
+print('Total number of chars = ',len(freq.keys()))
+print('The frequency of each char =\n',freq)
 Btestdata = np.array(Bdataset)
 Dtestdata = np.array(Ddataset)
-np.savetxt('blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
-np.savetxt('distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
-#dict = {'features': features}
-#df = pd.DataFrame(dict)
-#df.to_csv('testdata.csv', header=False, index=False, sep=",",escapechar=" ",quoting=csv.QUOTE_NONE)
+print('Feature extraction for '+str(tracker)+' images done')
+print('='*40+'\n'+'Error images:\n')
+temp = [print(x) for x in exceptions]
+print('Total '+str(len(exceptions))+' Error \n'+'='*40)
+
+
+
+np.savetxt(your_path_here+'blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
+np.savetxt(your_path_here+'distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
