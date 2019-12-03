@@ -3,7 +3,8 @@ Created on Sun Nov 28 13:25:33 2019
 @author: ovoowo
 Yuezhen Chen
 """
-
+import matplotlib.image as mpimg
+from PIL import Image
 import numpy as np
 import pickle
 from sklearn.model_selection import train_test_split
@@ -12,10 +13,12 @@ from sklearn.metrics import classification_report
 import cv2
 import matplotlib.pyplot as plt
 import os, math
+#from getFeatures import getFeats
+from getTestFeatures import getFeats
 your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/letters_for_testing/')
-
+#os.chdir(your_path_here+'fraktur/letters_for_testing/')
+os.chdir(your_path_here+'fraktur/')
 
 Bfilename = 'blacktestdata.txt'
 Dfilename = 'distancetestdata.txt'
@@ -46,7 +49,7 @@ kVals = range(1, 30, 2)
 accuracies = []
 
 # loop over various values of `k` for the k-Nearest Neighbor classifier
-for k in range(1, 30, 2):
+for k in range(1, 6, 2):
           # train the k-Nearest Neighbor classifier with the current value of `k`
           clf = KNeighborsClassifier(n_neighbors=k)
           clf.fit(trainData, trainLabels)
@@ -67,13 +70,14 @@ model.fit(trainData, trainLabels)
 predictions = model.predict(testData)
 # show a final classification report demonstrating the accuracy of the classifier
 # for each of the digits
+
 print('\nEvaluation on Test Data')
 charLabels = np.array([chr(int(testLabels[i])) for i in range(testLabels.size)])
 charPredictions = np.array([chr(int(predictions[i])) for i in range(predictions.size)])
 print(classification_report(charLabels, charPredictions))
 
 # loop over a few random digits
-for i in np.random.randint(0, high=len(testLabels), size=(5,)):
+for i in np.random.randint(0, high=len(testLabels), size=(10,)):
          # grab the image and classify it
          image = testData[i]
          prediction = int(model.predict([image])[0])
@@ -94,3 +98,24 @@ for i in np.random.randint(0, high=len(testLabels), size=(5,)):
 
          #cv2.imshow("image", image)
          plt.show()
+###for presentation
+pickle.dump(model, open('5NN.sav', 'wb'))
+
+def randomPrediction():
+    your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+    #your_path_here = '/Users/Christine/cs/fraktur/'
+    datapath = your_path_here+'data/dataset/'
+    files = os.listdir(datapath)
+    n = len(files)
+    testID = np.random.randint(n-1,size = 10)
+    testID[0]
+    presentFile = [files[id] for id in testID]
+    for file in presentFile:
+        img = mpimg.imread(datapath+file) #Importing image data into Numpy arrays
+        imgplot = plt.imshow(img)
+        (black,dist,label) = getFeats(file,8)
+        pred = chr(int(model.predict(black.reshape(1, -1))))
+        # pred = model.predict(dist)
+        charLabel = chr(int(label))
+        plt.title('Label: '+pred+' Prediction: '+pred)
+        plt.show()
