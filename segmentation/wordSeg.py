@@ -11,7 +11,6 @@ from preprocess import preprocess
 # get correct labels from .txt transcription
 def getLabels(filename):
     txt_file = filename[:-4]+'.txt' # get .txt filename
-    print(os.getcwd(), txt_file)
     ein = open(txt_file, 'r') # open .txt file
     raw = ein.read().rstrip() # read .txt file
     ein.close()
@@ -25,11 +24,9 @@ def getLabels(filename):
 
 # segment line img into word imgs
 def wordSeg(filename, datapath, destpath):
-    print(filename)
     os.chdir(datapath) # path of original line img and label .txt
     labels = getLabels(filename)
     if len(labels)-13 < 2: return
-    print(labels)
     im = Image.open(filename, 'r') # open image
     width, height = im.size # image size
     pix_val = list(im.getdata()) # pixel color values

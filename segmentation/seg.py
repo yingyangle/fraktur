@@ -300,7 +300,7 @@ def morph(filename, type, destpath, sanity):
 
 # save image for each segmented char, and full image with char boundaries drawn on
 # type=0 means we're given a line of text, type=1 means we're given a word
-def seg(filename, type, datapath, destpath, thck=2):
+def seg(filename, type, datapath, destpath, thck=2, folder=''):
     os.chdir(datapath)
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
     img, nimg, bin, sanity = morph(filename, type, destpath, 1)
@@ -318,8 +318,8 @@ def seg(filename, type, datapath, destpath, thck=2):
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full nonbinary img
         ii += 1
-    if sanity == 0: print('Finished seg:', filename, '** NO SANITY CHECKS **')
-    else: print('Finished seg:', filename)
+    if sanity == 0: print('Finished seg:', folder, filename, '** NO SANITY CHECKS **')
+    else: print('Finished seg:', folder, filename)
     cv2.imwrite(filename[:-4]+'_segs.png', img) # save full image with regions drawn in red
 
 
