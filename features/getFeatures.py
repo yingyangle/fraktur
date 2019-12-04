@@ -26,6 +26,8 @@ your_path_here = '/Users/ovoowo/Desktop/fraktur/'
 #your_path_here = '/Users/Christine/cs/fraktur/'
 
 # get features for a char image
+
+
 def getFeats(filename,n):
     feats = np.array([])
     img = cv2.imread(filename)
@@ -35,12 +37,22 @@ def getFeats(filename,n):
     black = blackPerImg(filename,n) # list of black ratios for each section over the whole image
     dist = getDistance(filename,n) # edge to char distance
     # feats = np.concatenate((size, black, dist))
-    label =np.array([ord(filename[-5:-4])])
+    temp = filename[:-4]
+    id = 0
+    while id != -len(filename):
+        id -= 1
+        if filename[i] =='_':
+            temp = filename[i+1:]
+            break
+    label = temp
+    ############unfinished
+    label =np.array([ord(label)])
     return (black,dist,label)
-
+a ='ch'
+len(a)
 # execute
 #datapath to folder that store image
-def txtGenerator(datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with labels
+def txtGenerator(storepath,datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with labels
     os.chdir(datapath)
     Bdataset = []
     Ddataset = []
@@ -50,8 +62,8 @@ def txtGenerator(datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with 
     exceptions = [] #store error images
 
     #Error handler
-    name = foldername+'errors.txt'
-    aus = open(your_path_here+'/'+name, 'w')
+    name = 'errors.txt'
+    aus = open(storepath+foldername+name, 'w')
     aus.close()
 
     for filename in [x for x in os.listdir() if x[-3:] == 'png']:
@@ -59,7 +71,7 @@ def txtGenerator(datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with 
         try:
             letters.append(filename[-5:-4])
             (black,dist,label) = getFeats(filename,n)
-            if mode == 1:
+            if mode == 1: # with label
                 Bdata = np.concatenate((black,label))
                 Ddata = np.concatenate((dist,label))
                 Bdataset.append(Bdata)
@@ -89,5 +101,6 @@ def txtGenerator(datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with 
     temp = [print(x) for x in exceptions]
     print('Total '+str(len(exceptions))+' Error \n'+'='*40)
 
-    np.savetxt(your_path_here+foldername+str(n)+'_blacktestdata.txt',Btestdata, delimiter=', ', fmt='%12.8f')
-    np.savetxt(your_path_here+foldername+str(n)+'_distancetestdata.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
+    np.savetxt(storepath+foldername+str(n)+'_b.txt',Btestdata, delimiter=', ', fmt='%12.8f')
+    np.savetxt(storepath+foldername+str(n)+'_d.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
+    return

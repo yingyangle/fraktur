@@ -10,9 +10,9 @@ path =your_path_here + 'data/letter_data/'
 # img = [x for x in os.listdir(datapath) if x[-3:] == 'png']
 #os.chdir(datapath)
 
-def reLabel(labelsB,labelsD,foldername,datapath):
+def reLabel(errorpath,labelsB,labelsD,foldername,datapath):
     img = [x for x in os.listdir(datapath) if x[-3:] == 'png']
-    os.chdir(your_path_here)
+    os.chdir(errorpath)
     errorHandler = foldername+'errors.txt'
     file = open(errorHandler, 'r') # open .txt file
     raw = file.readlines() # read .txt file return lists of error image with \n

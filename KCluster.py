@@ -24,23 +24,22 @@ Xd = np.loadtxt(filenamed, delimiter = ',')
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # #  Elbow method:Decide n_cluster  # # # # # # #
-# def elbow(X):
-#     wcss = []
-#     K = list(range(1,7))
-#     for k in K:
-#         kmeans = KMeans(n_clusters=k).fit(X)
-#     #    labels = kmeans.predict(X)
-#         wcss.append(kmeans.inertia_)
-#     plt.plot(K, wcss)
-#     plt.title('The Elbow Method')
-#     plt.xlabel('Number of clusters')
-#     plt.ylabel('WCSS')
-#     plt.show()
-#     plt.savefig('elbow.png',dpi=200)
-#     #print(labels)
-#     return
-# elbow(X)
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+def elbow(X,storepath,storename):
+    wcss = []
+    K = list(range(1,7))
+    for k in K:
+        kmeans = KMeans(n_clusters=k).fit(X)
+    #    labels = kmeans.predict(X)
+        wcss.append(kmeans.inertia_)
+    fig = plt.figure()
+    plt.plot(K, wcss)
+    plt.title('The Elbow Method')
+    plt.xlabel('Number of clusters')
+    plt.ylabel('WCSS')
+    plt.savefig(storename,dpi=200)
+    return
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Fitting K-Means to the dataset
@@ -62,9 +61,9 @@ def kMeanclf(X,n):
     ax.set_zlabel('2 section blackness per image')
     plt.title("K Means", fontsize=14)
     plt.savefig('KMeans.png',dpi=200)
-
     counts = np.bincount(labels)
     return (np.argmax(counts),counts,labels)
+
 (xbL, xbA,labelsB) = kMeanclf(Xb,3)
 (xdL, xdA,labelsD) = kMeanclf(Xd,3)
 correctL.append(xbL)
@@ -81,13 +80,15 @@ print('For distance, all labels have: ', allL[1])
 # # # # # # Labeling the images with new Label  # # # # # #
 path =your_path_here+'fraktur/data/letter_data/'
 os.chdir(path)
-subFolders= os.listdir(path)
-Folder = subFolders[1]
+subFolders= os.listdir(path)[1:] #get rid of DS_Store
+Folder = subFolders[-5]
 datapath = path+Folder
-reLabel(labelsB,labelsD,Folder,datapath)
-sourcepath = path+Folder
+errorpath = '/Users/ovoowo/Desktop/fraktur/cleaning/letterfeatures/'
+reLabel(errorpath,labelsB,labelsD,Folder,datapath)
+#destname =
+os.mkdir(path)
 destpath =your_path_here+'fraktur/data/goodd'
-os.chdir(sourcepath)#access folder of letter
+os.chdir(datapath)#access folder of letter
 imgs = np.array([x for x in os.listdir(sourcepath) if x[-6:] == '{}{}.png'.format(correctL[0],correctL[1]) and x[:3] !='###'])
 
 ###2nd try:
@@ -100,7 +101,8 @@ imgs = np.array([x for x in os.listdir(sourcepath) if x[-6:] == '{}{}.png'.forma
 total = imgs.size
 counter = 0
 for img in imgs:
-    shutil.copy(img, destpath) #copy every image to the dataset folder
+    newname = os.rename(img,img[:-6]+img[-4:]) #get rid of the label for getFeature to extract label
+    shutil.copy(img, destpath+'/'+newname)#copy every image to the dataset folder
     counter += 1
     print(str(counter)+' images/ '+str(total)+' images moved\t')
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
