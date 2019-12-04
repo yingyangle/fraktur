@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Christine Yang
 # Fraktur Cracker
 # seg.py
@@ -19,7 +20,8 @@ import os, codecs, numpy as np, cv2, re, sys, shutil
 from preprocess import preprocess
 
 # letters than tend to get divorced
-divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w', 'h', 'U', 'Ü', 'Ù', 'Ú', 'Û']
+divorced = ['u', 'ů', 'ü', 'ù', 'û', 'n', 'm', 'w', 'h', 'U', 'Ü', 'Ù', 'Ú', 'Û', 'y', 'R', 'N', 'M', 'K', 'A']
+divorced2 = ['C', 'E', 'G', 'S'] # ugh
 # letters that tend to blend into the next letter
 blenders = ['e', 'è', 'é', 'ê', 'ë', 'r', 'v', 'ſ', 't']
 umlaut = 'ü'[-1]
@@ -38,6 +40,8 @@ def getLabels(filename, type):
         index = filename.rfind('_') # index of last occurrence of '_' in filename
         txt = filename[index+1:-4] # word label of this img
     txt = re.sub('[\.\,\'\"\“\„\-]', '', txt) # replace punctuation
+    txt = re.sub(r' \\ ', r'\\', txt)
+    txt = re.sub(' / ', '/', txt)
     txt = re.sub(' ', '', txt) # replace spaces
     # add '#' chars for extra letters at the end from bad segmentation
     chars_str = txt+'{0:#^50}'.format('')
@@ -138,13 +142,29 @@ def drip(bin, bin_orig, dims, dir):
 def sanityCheckDivorce(bin, bin_orig, dims, lab):
     x, y, w, h = dims # dimensions of contour bounding box
     ratioThresh = -1 # width/height ratio can't be less than this
-    if lab in ['m', 'w']: ratioThresh = 1 # set ratioThresh
+    if lab in ['m', 'w', 'M']: ratioThresh = 1 # set ratioThresh
     elif lab is 'h': ratioThresh = 0.35
-    elif lab is 'u' or lab is 'n': ratioThresh = 0.7
+    elif lab in ['u', 'n', 'K']: ratioThresh = 0.7
+    elif lab in ['R', 'N', 'A']: ratioThresh = 0.8
     else: ratioThresh = 0.5 # set ratioThresh for n's and other u's
     ratio = w / h # width/height ratio of char image
     change = 0
     if ratio < ratioThresh: # if below ratioThresh, drip right
+        bin = drip(bin, bin_orig, dims, 1)
+        change = 1
+    return (bin, change)
+
+def sanityCheckDivorce2(bin, bin_orig, dims, contour, lab):
+    x, y, w, h = dims # dimensions of contour bounding box
+    ratioThresh = -1 # white/black ratio can't be more than this
+    if lab in ['C', 'S']: ratioThresh = 0.6
+    elif lab == 'E': ratioThresh = 0.65
+    elif lab == 'G': ratioThresh = 0.5
+    else: ratioThresh = 0.5 # set ratioThresh for n's and other u's
+    box = getContour(bin_orig, contour, 1)
+    ratio = 1-np.count_nonzero(box)/(w*h) # white/black ratio of char image
+    change = 0
+    if ratio > ratioThresh: # if below ratioThresh, drip right
         bin = drip(bin, bin_orig, dims, 1)
         change = 1
     return (bin, change)
@@ -224,6 +244,7 @@ def morph(filename, type, destpath, sanity):
     #     x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
     #     cv2.imwrite('temp/'+filename+str(i)+'_'+str(sanity)+'.png',bin[y:y+h, x:x+w])
     while i < len(contours): # for each contour
+        contour = contours[i]
         x, y, w, h = cv2.boundingRect(contours[i]) # get bounding box for cropping
         dims = [x, y, w, h] # dimensions of bounding box in list form
         ones = np.ones_like(nimg) # create array of 1s (almost blacks)
@@ -240,6 +261,10 @@ def morph(filename, type, destpath, sanity):
             if lab in divorced: # check for commonly divorced letters
                 if divorce_flag != 1: # =1 means connection already drawn from other half of divorced chunk
                     bin, divorce_flag = sanityCheckDivorce(bin, bin_orig, dims, lab)
+                else: divorce_flag = 0 # exit divorce_flag
+            elif lab in divorced2: # check for commonly divorced letters
+                if divorce_flag != 1: # =1 means connection already drawn from other half of divorced chunk
+                    bin, divorce_flag = sanityCheckDivorce2(bin, bin_orig, dims, contours[i], lab)
                 else: divorce_flag = 0 # exit divorce_flag
             ### SANITY CHECK for BLENDING ###
             elif lab in blenders: # check for commonly blended letters
@@ -269,13 +294,13 @@ def morph(filename, type, destpath, sanity):
         ii += next_letter # move on to next letter in labels
         i += 1 # move on to next contour
     # save resulting binary img after morphological operations
-    if sanity == 0: filename = '###' + filename
-    cv2.imwrite(destpath+'/'+filename[:-4]+'_morph.png', bin)
+    # if sanity == 0: filename = '###' + filename
+    # cv2.imwrite(destpath+'/'+filename[:-4]+'_morph.png', bin)
     return (img, nimg, bin, sanity)
 
 # save image for each segmented char, and full image with char boundaries drawn on
 # type=0 means we're given a line of text, type=1 means we're given a word
-def seg(filename, type, datapath, destpath, thck=2):
+def seg(filename, type, datapath, destpath, thck=2, folder=''):
     os.chdir(datapath)
     # orig img, flat img, and binary inverted img adjusted for diacritic and sanity checks
     img, nimg, bin, sanity = morph(filename, type, destpath, 1)
@@ -293,9 +318,9 @@ def seg(filename, type, datapath, destpath, thck=2):
         cv2.imwrite('{}_{}_{}.png'.format(filename[:-4], i, lab), roi) # save cropped output image
         cv2.drawContours(img, contours, i, (0,0,255), thickness=thck) # draw boundary on full nonbinary img
         ii += 1
-    if sanity == 0: print('Finished:', filename, '** NO SANITY CHECKS **')
-    else: print('Finished:', filename)
-    cv2.imwrite(filename[:-4]+'_segs.png', img) # save full image with regions drawn in red
+    if sanity == 0: print('Finished seg:', folder, filename, '** NO SANITY CHECKS **')
+    else: print('Finished seg:', folder, filename)
+    # cv2.imwrite(filename[:-4]+'_segs.png', img) # save full image with regions drawn in red
 
 
 ### execute / testing ###

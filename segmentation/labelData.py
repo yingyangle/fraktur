@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 # Christine Yang
 # Fraktur Cracker
 # labelData.py
 # separates labeled data into folders for each letter
 
 import os, re
+from os.path import join
 
 
 def labelData(datapath, destpath):
@@ -18,9 +20,9 @@ def labelData(datapath, destpath):
             code = str(ord(label[0])) + '_' + str(ord(label[1]))
         else: code = str(ord(label))
         try: # check if there's a folder for this letter
-            os.chdir(destpath+code+label)
+            os.chdir(join(destpath,code+label))
         except: # if not, make one
-            os.mkdir(destpath+code+label)
-            os.chdir(destpath+code+label)
+            os.mkdir(join(destpath,code+label))
+            os.chdir(join(destpath,code+label))
         # move letter image to its appropriate folder
-        os.rename(datapath+'/'+img, destpath+code+label+'/'+img)
+        os.rename(join(datapath,img), join(destpath,code+label,img))

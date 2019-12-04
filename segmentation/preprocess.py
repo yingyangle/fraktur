@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Christine Yang
 # Fraktur Cracker
 # preprocess.py

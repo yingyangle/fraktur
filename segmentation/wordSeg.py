@@ -1,4 +1,3 @@
-#!/Users/Christine/anaconda3/bin/python
 # -*- coding: utf-8 -*-
 # Christine Yang
 # Fraktur Cracker
@@ -15,7 +14,9 @@ def getLabels(filename):
     ein = open(txt_file, 'r') # open .txt file
     raw = ein.read().rstrip() # read .txt file
     ein.close()
-    txt = re.sub(u'[.,\'\"“„-]', '', raw) # replace punctuation
+    txt = re.sub('[.,\'\"“„-]', '', raw) # replace punctuation
+    txt = re.sub(r' \\ ', r'\\', txt)
+    txt = re.sub(' / ', '/', txt)
     # add '#' chars for extra letters at the end from bad segmentation
     filler = ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'] # len=13
     word_ls = txt.split(' ') + filler
@@ -25,6 +26,7 @@ def getLabels(filename):
 def wordSeg(filename, datapath, destpath):
     os.chdir(datapath) # path of original line img and label .txt
     labels = getLabels(filename)
+    if len(labels)-13 < 2: return
     im = Image.open(filename, 'r') # open image
     width, height = im.size # image size
     pix_val = list(im.getdata()) # pixel color values
@@ -51,19 +53,27 @@ def wordSeg(filename, datapath, destpath):
         left = spaces[i][-1]
         right = spaces[i+1][0]
         area = (left, 0, right, height)
-        cropped_im = im.crop(area)
+        cropped_im = im.crop(area) # cropped word image
         # imagename = linenum_wordnum_word.png
         imagename = filename[:-4]+'_'+str(i)+'_'+labels[i]+'.png'
+        imagename = re.sub('/', 'sl', imagename)
         cropped_im.save(imagename)
     return
 
 
 ### execute / testing ###
 
-os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
-#os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
-try: shutil.rmtree('test')
-except FileNotFoundError: pass
-os.mkdir('test')
-filename = 'sane.png'
-wordSeg(filename, os.getcwd(), os.getcwd()+'/test')
+# os.chdir('/Users/ovoowo/Desktop/fraktur/segmentation/test_data')
+# os.chdir('/Users/Christine/Documents/cs/fraktur/segmentation/test_data')
+# try: shutil.rmtree('test')
+# except FileNotFoundError: pass
+# os.mkdir('test')
+# filename = 'sane.png'
+#
+# txt_file = 'sane.txt' # get .txt filename
+# print(os.getcwd(), txt_file)
+# ein = open(txt_file, 'r') # open .txt file
+# raw = ein.read() # read .txt file
+# ein.close()
+#
+# wordSeg(filename, os.getcwd(), os.getcwd()+'/test')
