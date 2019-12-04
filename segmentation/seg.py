@@ -294,8 +294,8 @@ def morph(filename, type, destpath, sanity):
         ii += next_letter # move on to next letter in labels
         i += 1 # move on to next contour
     # save resulting binary img after morphological operations
-    if sanity == 0: filename = '###' + filename
-    cv2.imwrite(destpath+'/'+filename[:-4]+'_morph.png', bin)
+    # if sanity == 0: filename = '###' + filename
+    # cv2.imwrite(destpath+'/'+filename[:-4]+'_morph.png', bin)
     return (img, nimg, bin, sanity)
 
 # save image for each segmented char, and full image with char boundaries drawn on
@@ -320,7 +320,7 @@ def seg(filename, type, datapath, destpath, thck=2, folder=''):
         ii += 1
     if sanity == 0: print('Finished seg:', folder, filename, '** NO SANITY CHECKS **')
     else: print('Finished seg:', folder, filename)
-    cv2.imwrite(filename[:-4]+'_segs.png', img) # save full image with regions drawn in red
+    # cv2.imwrite(filename[:-4]+'_segs.png', img) # save full image with regions drawn in red
 
 
 ### execute / testing ###
