@@ -31,8 +31,8 @@ _________________________________
 
 import os, numpy as np, cv2
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
+#your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
 os.chdir(your_path_here+'fraktur/features/')
 
 

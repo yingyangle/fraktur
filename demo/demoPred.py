@@ -1,10 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec  5 03:22:33 2019
+
+@author: ovoowo
+"""
 import pickle,os, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from getTestFeatures import getFeats, getData # import make a small getfeatures function for testing
-your_path_here = '/Users/ovoowo/Desktop/fraktur/'
-#your_path_here = '/Users/Christine/cs/fraktur/'
+#your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+your_path_here = '/Users/Christine/cs/fraktur/'
 demopath = your_path_here+'demo/'
 
 def demoPrediction(features,label,model,filepath):
@@ -36,7 +43,9 @@ model = pickle.load(open('5_8_NN.sav','rb'))
 #    Btestdata = np.array(Bdataset)
 #    np.savetxt(img+'.txt',Btestdata, delimiter=', ', fmt='%12.8f')
 #########################################################
+ignore = '01525_5_ihm_2_m.png.txt'
 for txt in [x for x in os.listdir() if x[-3:] == 'txt']:
-    (features,label) = getData(txt,demopath)
-    demoPrediction(features,label,model,demopath+txt[:-4])
+    if txt != ignore:
+        (features,label) = getData(txt,demopath)
+        demoPrediction(features,label,model,demopath+txt[:-4])
 
