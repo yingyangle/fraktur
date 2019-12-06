@@ -1,6 +1,9 @@
 # fraktur
 Fraktur Cracker
 
+*** **Note: This README is not up to date**
+
+
 ### _getFeatures.py_
 gets features for each character image. currently set to run on data in **segmentation/letters/E**.
 
