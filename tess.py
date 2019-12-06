@@ -71,8 +71,10 @@ print('Tesseract Accuracy:', accuracy)
 print('Tesseract Accuracy for each letter:')
 for key,value in accuracyDict.items():
     print(key,value,'%')
+    
 
-# # testing
+# testing
+
 # os.chdir(join(your_path_here, 'testdata'))
 # images = [x for x in os.listdir() if x[-3:] == 'png']
 # # get Tesseract transcriptions
