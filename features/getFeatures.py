@@ -17,41 +17,47 @@
 #       - # pixels (distance) from left edge of image to outer edge of char
 #       - # pixels (distance) from right edge of image to outer edge of char
 
-import os, numpy as np, cv2
+import os, numpy as np, pickle, cv2
 from zoning_YC import blackPerSect, blackPerImg, getDistance
-import pandas as pd
-import csv
+
+
 # from distance import getDistance
 your_path_here = '/Users/ovoowo/Desktop/fraktur/'
 #your_path_here = '/Users/Christine/cs/fraktur/'
 
+
+
 # get features for a char image
 
 
-def getFeats(filename,n):
-    feats = np.array([])
+def getFeats(datapath,filename,n):
+    your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+    os.chdir(your_path_here+'features/')
+    customdict = pickle.load(open('dictionary.sav','rb'))
+    os.chdir(datapath)
+
     img = cv2.imread(filename)
     num_rows, num_cols, _ = img.shape
     size = np.array([num_rows / num_cols]) # width/height ratio of image
 #    blackS = blackPerSect(filename) # list of black ratios for each section
     black = blackPerImg(filename,n) # list of black ratios for each section over the whole image
     dist = getDistance(filename,n) # edge to char distance
-    # feats = np.concatenate((size, black, dist))
     temp = filename[:-4]
     id = 0
-    while id != -len(filename):
+    while id != -len(temp):
         id -= 1
-        if filename[i] =='_':
-            temp = filename[i+1:]
+        if temp[id] =='_':
+            label = temp[id+1:]
             break
-    label = temp
-    ############unfinished
-    label =np.array([ord(label)])
+    ############finished#############
+    if len(label) != 1:
+        label = customdict[label]
+    else:
+        label =np.array([ord(label)])
     return (black,dist,label)
-a ='ch'
-len(a)
+
 # execute
-#datapath to folder that store image
+#datapath to a letter folder that store image
 def txtGenerator(storepath,datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with labels
     os.chdir(datapath)
     Bdataset = []
@@ -63,14 +69,12 @@ def txtGenerator(storepath,datapath,mode,foldername,n): #mode = 0 no label, mode
 
     #Error handler
     name = 'errors.txt'
-    aus = open(storepath+foldername+name, 'w')
-    aus.close()
 
     for filename in [x for x in os.listdir() if x[-3:] == 'png']:
         tracker += 1
         try:
-            letters.append(filename[-5:-4])
-            (black,dist,label) = getFeats(filename,n)
+#            letters.append(filename[-5:-4])
+            (black,dist,label) = getFeats(datapath,filename,n)
             if mode == 1: # with label
                 Bdata = np.concatenate((black,label))
                 Ddata = np.concatenate((dist,label))
@@ -79,21 +83,27 @@ def txtGenerator(storepath,datapath,mode,foldername,n): #mode = 0 no label, mode
             else:
                 Bdataset.append(black)
                 Ddataset.append(dist)
-        except:
+        except Exception as e:
+            print(e)
             exceptions.append(filename)
-            aus = open(your_path_here+'/'+name, 'a')
+            aus = open(storepath+foldername+name, 'a')
             aus.write(filename + '\n')
             aus.close()
-        print(str(tracker)+' images/ '+str(nImg)+' images done')
-    freq ={} #Get the frequency
-    for l in letters:
-        keys = freq.keys()
-        if l in keys:
-            freq[l] += 1
+        if nImg < 500:
+            if tracker % 100 == 99:
+                print(str(tracker)+' images/ '+str(nImg)+' images done')
         else:
-            freq[l] = 1
-    print('Total number of chars = ',len(freq.keys()))
-    print ("Char - frequency : \n", freq)
+            if tracker % 500 == 499:
+                print(str(tracker)+' images/ '+str(nImg)+' images done')
+    # freq ={} #Get the frequency
+    # for l in letters:
+    #     keys = freq.keys()
+    #     if l in keys:
+    #         freq[l] += 1
+    #     else:
+    #         freq[l] = 1
+    # print('Total number of chars = ',len(freq.keys()))
+    # print ("Char - frequency : \n", freq)
     Btestdata = np.array(Bdataset)
     Dtestdata = np.array(Ddataset)
     print('Feature extraction for '+str(tracker)+' images done')

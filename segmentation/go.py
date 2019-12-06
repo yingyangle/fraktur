@@ -12,13 +12,6 @@ from labelData import labelData
 # your_path_here = '/Users/ovoowo/Desktop/fraktur'
 your_path_here = '/Users/Christine/Documents/cs/fraktur'
 
-########## TO RUN ON FULL DATASET: ##########
-# - we'll only use RIDGES-Fraktur and dta19 in GT4HistOCR/corpus
-#
-# - run renameFiles.py setting your_path to the path to RIDGES-Fraktur
-# - run go.py, but replace the path in the line with "### HERE ###" to the path to RIDGES-Fraktur
-# - run checkLabels.py replacing letter_data with the path to the letter_data folder in RIDGES-Fraktur
-# - repeat the above 3 steps for dta19
 
 # path to a book folder -- use if you're only running seg on one book
 folder_path = your_path_here+'/data/bravo'
