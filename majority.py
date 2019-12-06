@@ -37,9 +37,11 @@ def twoLettersMajorityBaseline(folderpath, a, b):
 os.chdir(join(your_path_here, 'data/3books'))
 
 # accuracy = getMajorityBaseline(os.getcwd())
+# accuracy = round(accuracy, 3)
 # print('Majority Baseline Accuracy:', accuracy)
 
 accuracy = twoLettersMajorityBaseline(os.getcwd(), 'f', 'ſ')
+accuracy = round(accuracy, 3)
 print("Majority Baseline Accuracy for 'f' and 'ſ':", accuracy)
 
 # results for data/3books

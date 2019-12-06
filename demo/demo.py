@@ -1,18 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dec  5 03:22:33 2019
-
-@author: ovoowo
-"""
 import pickle,os, numpy as np
+import matplotlib.pyplot as plt, matplotlib.image as mpimg
 from sklearn.neighbors import KNeighborsClassifier
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from getTestFeatures import getFeats, getData # import make a small getfeatures function for testing
+from getTestFeatures import getFeats, getData 
+# import make a small getfeatures function for testing
+
 #your_path_here = '/Users/ovoowo/Desktop/fraktur/'
 your_path_here = '/Users/Christine/cs/fraktur/'
-demopath = your_path_here+'demo/'
 
 def demoPrediction(features,label,model,filepath):
     print(filepath)
@@ -30,22 +23,27 @@ def demoPrediction(features,label,model,filepath):
     plt.show()
     return
 
+
+# execute 
+
+demopath = your_path_here+'demo/'
 os.chdir(demopath)
-model = pickle.load(open('5_8_NN.sav','rb'))
+model = pickle.load(open('5_8_NN.sav','rb')) # load trained model
+
 #########################################################
-#######Run it once for featuretxt then comment out#######
+####### Run this once for featuretxt then comment it out #######
 #imgs = [x for x in os.listdir() if x[-3:] == 'png']
 #for img in imgs:
 #    Bdataset = []
-#    (black,label) = getFeats(demopath,img,8)
+#    (black, label) = getFeats(demopath,img,8)
 #    Bdata = np.concatenate((black,label))
 #    Bdataset.append(Bdata)
 #    Btestdata = np.array(Bdataset)
-#    np.savetxt(img+'.txt',Btestdata, delimiter=', ', fmt='%12.8f')
+#    np.savetxt(img+'.txt', Btestdata, delimiter=', ', fmt='%12.8f')
 #########################################################
-ignore = '01525_5_ihm_2_m.png.txt'
+
+# show model prediction and actual label for each img
 for txt in [x for x in os.listdir() if x[-3:] == 'txt']:
-    if txt != ignore:
-        (features,label) = getData(txt,demopath)
-        demoPrediction(features,label,model,demopath+txt[:-4])
+    (features, label) = getData(txt, demopath)
+    demoPrediction(features, label, model, demopath+txt[:-4])
 

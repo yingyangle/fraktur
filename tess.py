@@ -23,8 +23,9 @@ your_path_here = '/Users/Christine/cs/fraktur/'
 
 # print Tesseract's transcription of a Fraktur image
 def tess(filename):
-    # frk = german fraktur, psm=7 treats image as line of text
-    with PyTessBaseAPI(lang='frk', psm=7) as api:
+    # frk = german fraktur
+    # psm=7 treats image as line of text, psm=10 for single char
+    with PyTessBaseAPI(lang='frk', psm=10) as api:
         api.SetImageFile(filename)
         actualLabel = filename[filename.rfind('_')+1:-4]
         predictLabel = api.GetUTF8Text().rstrip()
@@ -47,7 +48,7 @@ def runTessTest(folderpath):
     countDict = dict(Counter(actualLabels))
     correctDict = \
         {actualLabels[i]:letterCorrectCounts[i] for i in range(len(actualLabels))} 
-    api = PyTessBaseAPI(lang='frk', psm=7)
+    api = PyTessBaseAPI(lang='frk', psm=10)
     correctCount = 0
     for i in range(len(images)):
         img = images[i]
@@ -58,7 +59,7 @@ def runTessTest(folderpath):
             correctDict[predictLabel] += 1
     accuracy = correctCount / len(images)
     accuracyDict = \
-        {x:correctDict[x]/countDict[x] for x in countDict}
+        {x:round(correctDict[x]/countDict[x], 3) for x in countDict}
     return (accuracy, accuracyDict)
             
         
@@ -67,6 +68,7 @@ def runTessTest(folderpath):
 
 os.chdir(join(your_path_here, 'data/3books'))
 accuracy, accuracyDict = runTessTest(os.getcwd())
+accuracy = round(accuracy, 3)
 print('Tesseract Accuracy:', accuracy)
 print('Tesseract Accuracy for each letter:')
 for key,value in accuracyDict.items():
@@ -77,6 +79,7 @@ for key,value in accuracyDict.items():
 
 # os.chdir(join(your_path_here, 'testdata'))
 # images = [x for x in os.listdir() if x[-3:] == 'png']
+# correctCount = 0
 # # get Tesseract transcriptions
 # for img in images:
 #     ans = tess(img)
