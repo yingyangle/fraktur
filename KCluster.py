@@ -1,19 +1,14 @@
+import os, shutil, numpy as np, matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn import metrics
-import os,shutil
 from sklearn.metrics import silhouette_score
+from mpl_toolkits.mplot3d import Axes3D
+from relabel import reLabel
+
 your_path_here = '/Users/ovoowo/Desktop/fraktur/'
 #your_path_here = '/Users/Christine/cs/fraktur/'
+os.chdir(your_path_here)
 datapath = your_path_here+'features/'
-#from lettersCounter import letterCounter
-from relabel import reLabel
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
-from mpl_toolkits.mplot3d import Axes3D
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/')
 
 def fetchFeature(filename,path):
     os.chdir(path)

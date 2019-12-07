@@ -1,18 +1,18 @@
-import matplotlib.image as mpimg
-import numpy as np
-import matplotlib.pyplot as plt
-import os, math, pickle
-your_path_here = '/Users/ovoowo/Desktop/fraktur/'
-#your_path_here = '/Users/Christine/cs/fraktur/'
-datapath = your_path_here+'features/'
-txtpath = your_path_here+'datatxt/'
-os.chdir(datapath)
+import os, math, pickle, numpy as np
+import matplotlib.pyplot as plt, matplotlib.image as mpimg
 from KNN import knnClf, getData
 from getFeatures import getFeats,txtGenerator
+
+your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+# your_path_here = '/Users/Christine/cs/fraktur/'
+datapath = your_path_here + 'features/'
+txtpath = your_path_here + 'datatxt/'
+os.chdir(datapath)
+
 plotpath = your_path_here+'plot/'
 
-#Plot k vs accuracy for the same N
-#want to plot subplot to compare features:blackness and distance
+# Plot k vs accuracy for the same N
+# want to plot subplot to compare features:blackness and distance
 def kAccuracy(ks,bAccuracies, dAccuracies,bPins,dPins,n):
     fig = plt.figure()
     plt.plot(np.array(ks), np.array(bAccuracies), 'p-', label = 'Blackness for Pout')
@@ -54,7 +54,7 @@ def nk(bks, dks, n):
     plt.savefig(plotpath +'nk.png',dpi=200)
     return
 
-#plot N vs best Accuracy for two features
+# plot N vs best Accuracy for two features
 def nbestkAccuracy(n,bestbAccuracy,bestdAccuracy,bestbKs,bestdKs):
     fig = plt.figure()
     plt.plot(np.array(n), np.array(bestbAccuracy), 'p-', label = 'Blackness')

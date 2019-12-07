@@ -19,6 +19,7 @@
 
 import os, numpy as np, pickle
 from os.path import join
+from shutil import copyfile
 from zoning_YC import blackPerSect, blackPerImg, getDistance
 
 # your_path_here = '/Users/ovoowo/Desktop/fraktur/'
@@ -69,22 +70,40 @@ def createDataset(storepath, datapath, n, labelMode=1, featMode=0):
             aus.close()
         if num_imgs < 500: # print progress
             if tracker % 100 == 99: 
-                print(str(tracker)+' images/ '+str(num_imgs)+' images done')
+                print(str(tracker)+' images / '+str(num_imgs)+' images done')
         else: # print progress
             if tracker % 500 == 499: 
-                print(str(tracker)+' images/ '+str(num_imgs)+' images done')
+                print(str(tracker)+' images / '+str(num_imgs)+' images done')
     dataset = np.array(features)
     # print('Feature extraction for '+str(tracker)+' images done')
     # print('='*40+'\n'+'Error images:\n')
     # print('Total '+str(len(exceptions))+' Error \n'+'='*40)
     foldername = datapath[datapath.rfind('/')+1:]
-    np.savetxt(join(storepath,foldername+str(n)+'_zones.txt'),\
+    np.savetxt(join(storepath,foldername+'_'+str(n)+'zones.txt'),\
                 dataset,delimiter=', ',fmt='%12.8f')
     return
 
+# only get imgs from datapeth if their label is in letters list
+# copy imgs to new folder
+# doesn't work for digraphs at the moment
+def getLetters(datapath, letters):
+    os.chdir(datapath)
+    new_folder = ''.join(letters)
+    try:
+        os.mkdir(new_folder) # make new folder to store imgs for these letters
+    except: pass # folder exists for some reason or another
+    images = [x for x in os.listdir() if x[x.rfind('_')+1:-4] in letters]
+    for img in images: # copy matching imgs to new folder
+        copyfile(img, join(your_path_here, 'data', new_folder, img))
+    return
 
 # execute
     
-# datapath = join(your_path_here, 'data/tk')
+# get matching letter imgs
+# datapath = join(your_path_here, 'data/3books')
+# getLetters(datapath, ['f', 'ſ'])
+
+# get features dataset
+# datapath = join(your_path_here, 'data/fſ')
 # storepath = join(your_path_here, 'data')
 # createDataset(storepath, datapath, 8, 1, 0)

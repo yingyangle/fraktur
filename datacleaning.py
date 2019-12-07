@@ -8,15 +8,17 @@ Created on Mon Dec  2 03:27:08 2019
 # # # # # # # # # # # # # #
 # Yuezhen Chen
 # Please Work
+
 import os,numpy as np,shutil
+from relabel import reLabel
+from KCluster import silhouette, kMeanclf,fetchFeature
+
 your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
 datapath = your_path_here+'fraktur/features/'
 storepath = your_path_here +'fraktur/cleaning/' #the place to store info for cleaning
 folder = 'testdata/letter_data/' #the one store imgs we want to clean
 imgpath =your_path_here +'fraktur/'+folder #the place to get all books imgs'feature
-from relabel import reLabel
-from KCluster import silhouette, kMeanclf,fetchFeature
 txtpath = storepath+'letterfeatures/' #to get the error and feature txt for books
 
 ###First called dataforKMeans once in features folder to get all the unlabel features

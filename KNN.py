@@ -83,18 +83,18 @@ def knnClf(data, labels, kbound):
     #          print("i think tha letter is : {}".format(chr(prediction))+'\nThe actual value is :'+chr(int(testLabels[i])))
     
     #store the best model as pickle
-    mod_name = 'k'+str(kVals[i])+'_'+str(N)+'_NN.sav'
-    pickleModel = open(join(your_path_here, 'pickles/'+mod_name),'wb')
+    mod_name = 'k'+str(kVals[i])+'z'+str(N)+'_KNN.sav'
+    pickleModel = open(join(your_path_here, mod_name),'wb')
     pickle.dump(model, pickleModel)
-    acc_name = str(kVals[i])+'_'+str(N)+'_accuracy.sav'
-    pickleAccuracies = open(join(your_path_here, 'pickles/'+acc_name),'wb')
+    acc_name = 'k'+str(kVals[i])+'z'+str(N)+'_accuracy.sav'
+    pickleAccuracies = open(join(your_path_here, acc_name),'wb')
     pickle.dump(accuracies, pickleAccuracies)
     return (accuracies, Pins) # best k and its accuracy
     
 
 # execute
 
-# filename = 'tk8_zones.txt'
+# filename = 'fſ_8zones.txt'
 # txtpath = join(your_path_here, 'data')
 # data, labels = getData(filename, txtpath)
 # accuracies, Pins = knnClf(data, labels, 15)

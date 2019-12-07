@@ -1,0 +1,21 @@
+training data points: 3536
+validation data points: 393
+testing data points: 1310
+k=1, accuracy=95.17%
+k=3, accuracy=94.91%
+k=5, accuracy=94.15%
+k=7, accuracy=93.38%
+k=9, accuracy=93.38%
+k=11, accuracy=92.62%
+k=13, accuracy=92.11%
+k=1 achieved highest accuracy of 95.17% on validation data
+
+Evaluation on Test Data
+              precision    recall  f1-score   support
+
+           f       0.91      0.87      0.89       350
+           ſ       0.95      0.97      0.96       960
+
+    accuracy                           0.94      1310
+   macro avg       0.93      0.92      0.93      1310
+weighted avg       0.94      0.94      0.94      1310
