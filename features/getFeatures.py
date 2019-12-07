@@ -1,7 +1,7 @@
 # Christine Yang, Yuezhen Chen
 # Fraktur Cracker
 # getFeatures.py
-# get features for each char image
+# get features for each letter image, save features in .txt file
 
 # https://pdfs.semanticscholar.org/6d50/6c0c85cda0ab43b47f997d8c179986e1ba5a.pdf
 
@@ -17,100 +17,74 @@
 #       - # pixels (distance) from left edge of image to outer edge of char
 #       - # pixels (distance) from right edge of image to outer edge of char
 
-import os, numpy as np, pickle, cv2
+import os, numpy as np, pickle
+from os.path import join
 from zoning_YC import blackPerSect, blackPerImg, getDistance
 
-
-# from distance import getDistance
-your_path_here = '/Users/ovoowo/Desktop/fraktur/'
-#your_path_here = '/Users/Christine/cs/fraktur/'
-
+# your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+your_path_here = '/Users/Christine/cs/fraktur/'
 
 
 # get features for a char image
-
-
-def getFeats(datapath,filename,n):
-    your_path_here = '/Users/ovoowo/Desktop/fraktur/'
+# mode=0 get blackness, mode=1 get distance 
+def getFeats(datapath, filename, n, mode=2):
     os.chdir(your_path_here+'features/')
-    customdict = pickle.load(open('dictionary.sav','rb'))
+    customdict = pickle.load(open('dictionary.sav', 'rb'))
     os.chdir(datapath)
-
-    img = cv2.imread(filename)
-    num_rows, num_cols, _ = img.shape
-    size = np.array([num_rows / num_cols]) # width/height ratio of image
-#    blackS = blackPerSect(filename) # list of black ratios for each section
-    black = blackPerImg(filename,n) # list of black ratios for each section over the whole image
-    dist = getDistance(filename,n) # edge to char distance
-    temp = filename[:-4]
-    id = 0
-    while id != -len(temp):
-        id -= 1
-        if temp[id] =='_':
-            label = temp[id+1:]
-            break
-    ############finished#############
+    label = filename[filename.rfind('_')+1:-4] # correct label for letter img
     if len(label) != 1:
         label = customdict[label]
     else:
-        label =np.array([ord(label)])
-    return (black,dist,label)
+        label = np.array([ord(label)])
+    if mode is 0: # list of black ratios for each section over the whole image
+        black = blackPerImg(filename, n) 
+        return (black, label)
+    if mode is 1: # edge to char distance
+        dist = getDistance(filename, n) 
+        return (dist, label)
 
-# execute
-#datapath to a letter folder that store image
-def txtGenerator(storepath,datapath,mode,foldername,n): #mode = 0 no label, mode = 1 with labels
+
+# creat .txt file of distance features for each letter img in a folder
+# datapath = folder that stores letter images
+# labelMode=0 don't save labels in dataset, labelMode=1 save dataset with labels
+# n = zoning size parameter
+# featMode=0 get blackness, featMode=1 get distance
+def createDataset(storepath, datapath, n, labelMode=1, featMode=0): 
     os.chdir(datapath)
-    Bdataset = []
-    Ddataset = []
-    letters = []
-    nImg = len(os.listdir())
+    features = [] # list of features for each letter img
+    num_imgs = len(os.listdir()) # number of letter images
     tracker = 0
-    exceptions = [] #store error images
-
-    #Error handler
-    name = 'errors.txt'
-
     for filename in [x for x in os.listdir() if x[-3:] == 'png']:
         tracker += 1
-        try:
-#            letters.append(filename[-5:-4])
-            (black,dist,label) = getFeats(datapath,filename,n)
-            if mode == 1: # with label
-                Bdata = np.concatenate((black,label))
-                Ddata = np.concatenate((dist,label))
-                Bdataset.append(Bdata)
-                Ddataset.append(Ddata)
-            else:
-                Bdataset.append(black)
-                Ddataset.append(dist)
-        except Exception as e:
-            print(e)
-            exceptions.append(filename)
-            aus = open(storepath+foldername+name, 'a')
+        try: # get feature for this img
+            feature = getFeats(datapath, filename, n, featMode)
+            if labelMode == 1: # attach label
+                features.append(np.concatenate(feature))
+            else: # don't attach label
+                features.append(feat)
+        except Exception as e: # write error to .txt file
+            print(e) # print error
+            aus = open(storepath+'errors.txt', 'a')
             aus.write(filename + '\n')
             aus.close()
-        if nImg < 500:
-            if tracker % 100 == 99:
-                print(str(tracker)+' images/ '+str(nImg)+' images done')
-        else:
-            if tracker % 500 == 499:
-                print(str(tracker)+' images/ '+str(nImg)+' images done')
-    # freq ={} #Get the frequency
-    # for l in letters:
-    #     keys = freq.keys()
-    #     if l in keys:
-    #         freq[l] += 1
-    #     else:
-    #         freq[l] = 1
-    # print('Total number of chars = ',len(freq.keys()))
-    # print ("Char - frequency : \n", freq)
-    Btestdata = np.array(Bdataset)
-    Dtestdata = np.array(Ddataset)
-    print('Feature extraction for '+str(tracker)+' images done')
-    print('='*40+'\n'+'Error images:\n')
-    temp = [print(x) for x in exceptions]
-    print('Total '+str(len(exceptions))+' Error \n'+'='*40)
-
-    np.savetxt(storepath+foldername+str(n)+'_b.txt',Btestdata, delimiter=', ', fmt='%12.8f')
-    np.savetxt(storepath+foldername+str(n)+'_d.txt',Dtestdata, delimiter=', ', fmt='%12.8f')
+        if num_imgs < 500: # print progress
+            if tracker % 100 == 99: 
+                print(str(tracker)+' images/ '+str(num_imgs)+' images done')
+        else: # print progress
+            if tracker % 500 == 499: 
+                print(str(tracker)+' images/ '+str(num_imgs)+' images done')
+    dataset = np.array(features)
+    # print('Feature extraction for '+str(tracker)+' images done')
+    # print('='*40+'\n'+'Error images:\n')
+    # print('Total '+str(len(exceptions))+' Error \n'+'='*40)
+    foldername = datapath[datapath.rfind('/')+1:]
+    np.savetxt(join(storepath,foldername+str(n)+'_zones.txt'),\
+                dataset,delimiter=', ',fmt='%12.8f')
     return
+
+
+# execute
+    
+# datapath = join(your_path_here, 'data/tk')
+# storepath = join(your_path_here, 'data')
+# createDataset(storepath, datapath, 8, 1, 0)

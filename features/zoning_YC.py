@@ -31,10 +31,8 @@ _________________________________
 
 import os, numpy as np, cv2
 
-your_path_here = '/Users/ovoowo/Desktop/'
-#your_path_here = '/Users/Christine/cs/'
-os.chdir(your_path_here+'fraktur/features/')
-
+# your_path_here = '/Users/ovoowo/Desktop/'
+your_path_here = '/Users/Christine/cs/'
 
 THRESHOLD = 75 # adjustable threshold for b/w binary image
 n = 4 # adjustable threshold for zoning
@@ -67,6 +65,13 @@ def getImg(filename,n):
     ####
     return binary_img
 
+'''
+================================================================================
+Split Image into Zones
+================================================================================
+
+'''
+    
 # split binary image into 16 sections, return list of section matrices
 def getSections(binary_img,n):
     num_rows, num_cols = binary_img.shape
@@ -102,6 +107,26 @@ def printSections(filename,n):
         print(sects[s])
     return (sects, binary_img)
 
+'''
+================================================================================
+Black Pixel Ratio Feature
+================================================================================
+Top Indices: [[ 0,  1,  2,  3], [ 4,  5,  6,  7], [ 8,  9, 10, 11], [12, 13, 14, 15]]
+Bottom Indices: [[ 3,  2,  1,  0],[ 7,  6,  5,  4], [11, 10,  9,  8], [15, 14, 13, 12]]
+Left Indices: [[ 0,  4,  8, 12], [ 1,  5,  9, 13], [ 2,  6, 10, 14], [ 3,  7, 11, 15]])
+Right Indices: [[12,  8,  4,  0], [13,  9,  5,  1], [14, 10,  6,  2], [15, 11,  7,  3]])
+_________________
+| 0 | 4 | 8 | 12 |
+_________________
+| 1 | 5 | 9 | 13 |
+_________________
+| 2 | 6 | 10| 14 |
+_________________
+| 3 | 7 | 11| 15 |
+_________________
+
+'''
+    
 # get black percentage over each section for list of sections
 def blackPerSect(filename,n):
     binary_img = getImg(filename,n)
@@ -235,9 +260,10 @@ def getDistance(filename,n):
     return np.array(distances)
 
 # execute
-#filename = 'hard2_22_n.png'
-#filename = 'hard_5_e.png'
-#filename = 'hard_71_e.png'
+# os.chdir(your_path_here+'fraktur/features/')
+# filename = 'hard2_22_n.png'
+# filename = 'hard_5_e.png'
+# filename = 'hard_71_e.png'
 # filename = 'a_4_i.png'
 
 # filename = 'hoff_12_e.png'

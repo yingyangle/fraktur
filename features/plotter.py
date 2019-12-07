@@ -8,7 +8,7 @@ datapath = your_path_here+'features/'
 txtpath = your_path_here+'datatxt/'
 os.chdir(datapath)
 from KNN import knnClf, getData
-from getFeatures import getFeats,txtGenerator
+from getFeatures import getFeats, txtGenerator
 plotpath = your_path_here+'plot/'
 
 #Plot k vs accuracy for the same N

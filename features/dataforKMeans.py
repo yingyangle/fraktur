@@ -3,7 +3,7 @@ your_path_here = '/Users/ovoowo/Desktop/'
 #your_path_here = '/Users/Christine/cs/'
 modulepath = your_path_here +'fraktur/features/'
 os.chdir(modulepath)
-from getFeatures import getFeats,txtGenerator
+from getFeatures import getFeats, createDataset
 storepath = your_path_here +'fraktur/cleaning/' #the place to store imgs/error message
 booksfolder = 'testdata/letter_data/' #the one store books'imgs we want to clean
 imgpath =your_path_here +'fraktur/'+booksfolder
@@ -42,7 +42,9 @@ for book in books: #for each book folder
     for folder in letterFolders: #access the letter folder for one book
         #os.chdir(imgpath+folder) (storepath,datapath,mode,foldername,n)
         letterpath = bookpath +folder+'/'
-        txtGenerator(lstorepath,letterpath,0,folder,6) #get feature for every letter folder
+        # get feature for every letter folder
+        createDataset(lstorepath, letterpath, 6, 0, 0) # black feats
+        createDataset(lstorepath, letterpath, 6, 0, 1) # dist feats
         count += 1
         print('~'*40)
         print('Folder '+folder+' is done. \t '+str(count)+' out of '+str(total)+' folder left')
