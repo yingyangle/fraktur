@@ -17,32 +17,33 @@ Automated transcription of historical texts is an often explored challenge in th
 
 Our dataset consisted of scanned lines of Fraktur text from German books and the corresponding transcriptions for each line.
 
-![dataset](https://github.com/yingyangle/fraktur/blob/master/info/data_preview.png)
+<img src="./info/data_preview.png" alt="dataset" width="600">
 
 ### Features
 
 We tested two features, one being black pixel density and the other being edge to countour distance. Each image was divided into equal sections, and the black pixel density was measured for each section. The edge to countour distance was measured for each of the outermost sections.
 
-![features](https://github.com/yingyangle/fraktur/blob/master/info/features.png)
-
+<img src="./info/features.png" alt="features" width="600">
 
 ### Preprocessing
 
 Each image went through some initial preprocessing to optimize legibility.
 
-![preprocessing](https://github.com/yingyangle/fraktur/blob/master/info/preprocessing.png)
+<img src="./info/preprocessing.png" alt="preprocessing" width="600">
+
 
 ### Character Segmentation
 
 Because our dataset consisted of lines of text, we had to figure out how to automatically segment the lines into indivudal characters. We used OpenCV countours to try and detect the boundaries of each letter, shown in red. We ran into some challenges such as some letters such as "u" or "n" being split up, some letters blending into the next, and also attaching umlauts and diacritics to the base letter.
 
-![segmentation issues](https://github.com/yingyangle/fraktur/blob/master/info/segmentation_issues.png)
+<img src="./info/segmentation_issues.png" alt="segmentation issues" width="600">
+
 
 ### Data Cleaning
 
 Once we segmented the characters, we had to clean up the data to take care of mistakes in segmentation and labeling. For each letter, we used K-means clustering to look for outlier images that were mislabelled, by taking the largest cluster to be the correct one.
 
-![k-means clustering](https://github.com/yingyangle/fraktur/blob/master/info/cleaning_data.png)
+<img src="./info/cleaning_data.png" alt="k-means clustering" width="600">
 
 ### Results 
 
@@ -50,11 +51,8 @@ We chose to use a k-nearest neighbors classifier since it's a common technique u
 
 As shown in the graph below, the accuracy decreases as k is increased.
 
-![accuracies for different values of k](https://github.com/yingyangle/fraktur/blob/master/info/plots/knnAccuracy8.png)
+<img src="./info/plots/knnAccuracy8.png" alt="accuracies for different values of k" width="500">
 
 We also tested the effect of increasing the number of zones used to divide up each letter image. It appears that increasing the number of zones improves accuracy for the black pixel density feature, but not for the distance feature. In the graph below, the best k value was used for each number of zones (N). 
 
-![accuracies for different number of sections per image](https://github.com/yingyangle/fraktur/blob/master/info/zoning_dimensions.png)
-
-
-
+<img src="./info/zoning_dimensions.png" alt="accuracies for different number of sections per image" width="600">
