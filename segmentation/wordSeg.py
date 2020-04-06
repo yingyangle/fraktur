@@ -44,6 +44,7 @@ def wordSeg(filename, datapath, destpath):
     # get indices in groups of longest consecutive whitespace
     num_spaces = len(labels) - 1 - 13 # minus length of filler '#'s
     spaces_i = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:]
+    indices = sorted(range(len(groups_len)), key = lambda sub: groups_len[sub])[-num_spaces:]
     spaces_i.sort()
     # top N longest consecutive whitespace, where N is # spaces in the line
     spaces = [groups[i] for i in spaces_i]
