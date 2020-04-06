@@ -4,8 +4,11 @@
 Automated transcription of historical texts is an often explored challenge in the field of optical character recognition. Our project aims to apply a basic similarity-based approach to OCR for transcription of the Fraktur letter font, often used in historical German texts. Using a zoning-based black pixel density feature we were able to achieve approximately 92% character recognition accuracy using a k-NN classifier. 
 
 **Dataset**: GT4HistOCR- 300,000 ground truth images with labels
+
 **Model**: k-nearest neighbors classifier
+
 **Methodology**:
+
 * Preprocessing
 * Character segmentation
 * Data cleaning 
@@ -29,7 +32,7 @@ We tested two features, one being black pixel density and the other being edge t
 
 Each image went through some initial preprocessing to optimize legibility.
 
-<img src="./info/preprocessing.png" alt="preprocessing" width="600">
+<img src="./info/preprocessing.png" alt="preprocessing" width="500">
 
 
 ### Character Segmentation
